@@ -1,10 +1,49 @@
-import { minutesToMilliseconds } from "date-fns";
+import { format, hoursToMilliseconds, minutesToMilliseconds } from "date-fns";
 import type { ItemDefinition, Range, RowDefinition, Span } from "dnd-timeline";
 import { nanoid } from "nanoid";
+import { MarkerDefinition } from "./TimeAxis";
 
 interface GenerateRowsOptions {
 	disabled?: boolean;
 }
+
+export const generateGroups = (count: number, range: Range): Group[] => {
+	const groups = Array(count).fill(0).map(() => {
+		let id = `group-${nanoid(5)}`;
+		return {
+			id,
+			flights: generateFlights(5, id, range)
+		};
+	})
+	return groups;
+}
+export const generateFlights = (count: number, groupId: string, range: Range) => {
+	return Array(count)
+		.fill(0)
+		.map(() => {
+			let id = `flight-${nanoid(5)}`;
+			return {
+				id,
+				groupId,
+				items: generateFlightItems(3, id, range)
+			};
+		});
+};
+export const generateFlightItems = (count: number, flightId: string, range: Range) => {
+	return Array(count)
+		.fill(0)
+		.map(() => {
+			let id = `item-${nanoid(5)}`;
+			const span = generateRandomSpan(
+				range
+			);
+			return {
+				id,
+				flightId,
+				span
+			};
+		});
+};
 
 export const generateRows = (count: number, options?: GenerateRowsOptions) => {
 	return Array(count)
@@ -83,3 +122,70 @@ export const generateItems = (
 			};
 		});
 };
+export enum ItemType {
+	ListItem = 0,
+	SidebarItem = 1,
+	FlightRow = 2
+}
+export interface FlightItem extends ItemDefinition {
+
+}
+export interface Flight extends RowDefinition {
+	items: ItemDefinition[];
+}
+export const timeAxisMarkers: MarkerDefinition[] = [
+	{
+		value: hoursToMilliseconds(24),
+		getLabel: (date: Date) => format(date, "E"),
+	},
+	{
+		value: hoursToMilliseconds(2),
+		minRangeSize: hoursToMilliseconds(24),
+		getLabel: (date: Date) => format(date, "k"),
+	},
+	{
+		value: hoursToMilliseconds(1),
+		minRangeSize: hoursToMilliseconds(24),
+	},
+	{
+		value: hoursToMilliseconds(1),
+		maxRangeSize: hoursToMilliseconds(24),
+		getLabel: (date: Date) => format(date, "k"),
+	},
+	{
+		value: minutesToMilliseconds(30),
+		maxRangeSize: hoursToMilliseconds(24),
+		minRangeSize: hoursToMilliseconds(12),
+	},
+	{
+		value: minutesToMilliseconds(15),
+		maxRangeSize: hoursToMilliseconds(12),
+		getLabel: (date: Date) => format(date, "m"),
+	},
+	{
+		value: minutesToMilliseconds(5),
+		maxRangeSize: hoursToMilliseconds(6),
+		minRangeSize: hoursToMilliseconds(3),
+	},
+	{
+		value: minutesToMilliseconds(5),
+		maxRangeSize: hoursToMilliseconds(3),
+		getLabel: (date: Date) => format(date, "m"),
+	},
+	{
+		value: minutesToMilliseconds(1),
+		maxRangeSize: hoursToMilliseconds(2),
+	},
+];
+interface Group {
+	id: string;
+	flights: {
+		id: string;
+		groupId: string;
+		items: {
+			id: string;
+			flightId: string;
+			span: any
+		}[]
+	}[]
+}

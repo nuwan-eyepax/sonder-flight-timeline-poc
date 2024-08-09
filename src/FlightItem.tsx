@@ -1,6 +1,7 @@
 import { useItem } from "dnd-timeline";
 import type { Span } from "dnd-timeline";
 import type React from "react";
+import { ItemType } from "./utils";
 
 interface ItemProps {
 	id: string;
@@ -8,11 +9,14 @@ interface ItemProps {
 	children: React.ReactNode;
 }
 
-function Item(props: ItemProps) {
+function FlightItem(props: ItemProps) {
 	const { setNodeRef, attributes, listeners, itemStyle, itemContentStyle } =
 		useItem({
 			id: props.id,
 			span: props.span,
+			data: {
+				type: ItemType.ListItem
+			}
 		});
 
 	return (
@@ -23,8 +27,8 @@ function Item(props: ItemProps) {
 						border: "1px solid white",
 						width: "100%",
 						overflow: "hidden",
-						color: "blackz",
-						background: "green"
+						color: "black",
+						background: "green",
 					}}
 				>
 					{props.children}
@@ -34,4 +38,4 @@ function Item(props: ItemProps) {
 	);
 }
 
-export default Item;
+export default FlightItem;

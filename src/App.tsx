@@ -3,19 +3,23 @@ import { endOfDay, startOfDay } from "date-fns";
 import type { DragEndEvent, Range, ResizeEndEvent } from "dnd-timeline";
 import { TimelineContext } from "dnd-timeline";
 import React, { useCallback, useState } from "react";
-import Timeline from "./Timeline";
-import { generateItems, generateRows } from "./utils";
+import Timeline from "./FlightTimeline";
+import { generateGroups, generateItems, generateRows, ItemType } from "./utils";
+import { arrayMove } from "@dnd-kit/sortable";
 
 const DEFAULT_RANGE: Range = {
-	start: startOfDay(new Date()).getTime(),
-	end: endOfDay(new Date()).getTime(),
+	start: startOfDay(new Date(2024,1,1)).getTime(),
+	end: endOfDay(new Date(2024,1,31)).getTime(),
 };
+const campaign = {
+	flightGroups: []
+}
 
 function App() {
 	const [range, setRange] = useState(DEFAULT_RANGE);
 
-	const [rows] = useState(generateRows(5));
-	const [items, setItems] = useState(generateItems(10, range, rows));
+	const [rows, setRows] = useState(generateRows(3));
+	const [groups, setGroups] = useState(generateGroups(3, range));
 
 	const onResizeEnd = useCallback((event: ResizeEndEvent) => {
 		const updatedSpan =
@@ -24,38 +28,49 @@ function App() {
 		if (!updatedSpan) return;
 
 		const activeItemId = event.active.id;
+		console.log(event)
+		// setItems((prev) =>
+		// 	prev.map((item) => {
+		// 		if (item.id !== activeItemId) return item;
 
-		setItems((prev) =>
-			prev.map((item) => {
-				if (item.id !== activeItemId) return item;
-
-				return {
-					...item,
-					span: updatedSpan,
-				};
-			}),
-		);
+		// 		return {
+		// 			...item,
+		// 			span: updatedSpan,
+		// 		};
+		// 	}),
+		// );
 	}, []);
 
 	const onDragEnd = useCallback((event: DragEndEvent) => {
-		const activeRowId = event.over?.id as string;
+		const overedId = event.over?.id as string;
+
+		if (!overedId) return;
+
+		const activeId = event.active.id;
+		const activeItemType = event.active.data.current.type as ItemType;
+
 		const updatedSpan = event.active.data.current.getSpanFromDragEvent?.(event);
 
-		if (!updatedSpan || !activeRowId) return;
+		if (updatedSpan && activeItemType === ItemType.ListItem) {
+			// setItems((prev) =>
+			// 	prev.map((item) => {
+			// 		if (item.id !== activeId) return item;
 
-		const activeItemId = event.active.id;
+			// 		return {
+			// 			...item,
+			// 			rowId: overedId,
+			// 			span: updatedSpan,
+			// 		};
+			// 	}),
+			// );
+		} else if (activeItemType === ItemType.SidebarItem) {
+			setRows((prev) => {
+				const oldIndex = prev.findIndex((row) => row.id === activeId);
+				const newIndex = prev.findIndex((row) => row.id === overedId);
 
-		setItems((prev) =>
-			prev.map((item) => {
-				if (item.id !== activeItemId) return item;
-
-				return {
-					...item,
-					rowId: activeRowId,
-					span: updatedSpan,
-				};
-			}),
-		);
+				return arrayMove(prev, oldIndex, newIndex);
+			});
+		}
 	}, []);
 
 	return (
@@ -65,7 +80,7 @@ function App() {
 			onResizeEnd={onResizeEnd}
 			onRangeChanged={setRange}
 		>
-			<Timeline items={items} rows={rows} />
+			<Timeline groups={groups} />
 		</TimelineContext>
 	);
 }
