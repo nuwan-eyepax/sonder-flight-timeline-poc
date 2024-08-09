@@ -5,6 +5,7 @@ import { ItemType } from "./utils";
 
 interface ItemProps {
 	id: string;
+	groupId: string;
 	span: Span;
 	children: React.ReactNode;
 }
@@ -15,7 +16,8 @@ function FlightItem(props: ItemProps) {
 			id: props.id,
 			span: props.span,
 			data: {
-				type: ItemType.ListItem
+				type: ItemType.ListItem,
+				groupId: props.groupId
 			}
 		});
 

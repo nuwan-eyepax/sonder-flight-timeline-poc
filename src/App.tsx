@@ -39,34 +39,33 @@ function App() {
 	const onDragEnd = useCallback((event: DragEndEvent) => {
 		console.log(event)
 		const overedId = event.over?.id as string;
-
 		if (!overedId) return;
-
 		const activeId = event.active.id;
 		const activeItemType = event.active.data.current.type as ItemType;
-
 		const updatedSpan = event.active.data.current.getSpanFromDragEvent?.(event);
-
+		const groupId = event.active.data.current.groupId;
+		console.log(updatedSpan, activeItemType)
 		if (updatedSpan && activeItemType === ItemType.ListItem) {
-			// setItems((prev) =>
-			// 	prev.map((item) => {
-			// 		if (item.id !== activeId) return item;
-
-			// 		return {
-			// 			...item,
-			// 			rowId: overedId,
-			// 			span: updatedSpan,
-			// 		};
-			// 	}),
-			// );
+			setGroups((prev) => {
+				const groups = [...prev]
+				const groupIndex = groups.findIndex((group) => group.id === groupId);
+				groups[groupIndex].flights = groups[groupIndex].flights.map((item) => {
+					console.log(item,activeId)
+					if (item.id !== activeId) return item;
+					return {
+						...item,
+						rowId: overedId,
+						span: updatedSpan,
+					};
+				})
+				return groups
+			});
 		} else if (activeItemType === ItemType.SidebarItem) {
-			const groupId = event.active.data.current.groupId;
 			setGroups((prev) => {
 				const groups = [...prev]
 				const groupIndex = groups.findIndex((group) => group.id === groupId);
 				const oldIndex = groups[groupIndex].flights.findIndex((flight) => flight.id === activeId);
 				const newIndex = groups[groupIndex].flights.findIndex((flight) => flight.id === overedId);
-				console.log('called', oldIndex, newIndex, groups)
 				groups[groupIndex].flights = arrayMove(groups[groupIndex].flights, oldIndex, newIndex);
 				return groups
 			});

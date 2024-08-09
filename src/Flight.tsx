@@ -24,9 +24,9 @@ function Flight(props: FlightProps) {
 				{props.sidebar}
 			</div>
 			<div ref={setNodeRef} style={{ ...rowStyle, border: "1px solid", }}>
-				<DndContext modifiers={[restrictToHorizontalAxis]}>
+				{/* <DndContext modifiers={[restrictToHorizontalAxis]}> */}
 					{props.children}
-				</DndContext>
+				{/* </DndContext> */}
 			</div>
 		</div>
 	);

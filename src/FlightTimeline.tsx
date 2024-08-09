@@ -41,7 +41,7 @@ function FlightTimeline(props: FlightTimelineProps) {
 								<Flight id={flight.id} key={flight.id} sidebar={<Sidebar row={flight}  groupId={flight.groupId}/>}>
 
 									{flight.items.map((item) => (
-										<FlightItem id={item.id} key={item.id} span={item.span}>
+										<FlightItem id={item.id} key={item.id} span={item.span} groupId={flight.groupId}>
 											{`FlightItem ${item.id}`}
 										</FlightItem>
 									))}
