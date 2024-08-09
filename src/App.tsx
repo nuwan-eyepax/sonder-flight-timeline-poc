@@ -4,21 +4,16 @@ import type { DragEndEvent, Range, ResizeEndEvent } from "dnd-timeline";
 import { TimelineContext } from "dnd-timeline";
 import React, { useCallback, useState } from "react";
 import Timeline from "./FlightTimeline";
-import { generateGroups, generateItems, generateRows, ItemType } from "./utils";
+import { generateGroups, ItemType } from "./utils";
 import { arrayMove } from "@dnd-kit/sortable";
 
 const DEFAULT_RANGE: Range = {
-	start: startOfDay(new Date(2024,1,1)).getTime(),
-	end: endOfDay(new Date(2024,1,31)).getTime(),
+	start: startOfDay(new Date(2024, 1, 1)).getTime(),
+	end: endOfDay(new Date(2024, 3, 31)).getTime(),
 };
-const campaign = {
-	flightGroups: []
-}
 
 function App() {
 	const [range, setRange] = useState(DEFAULT_RANGE);
-
-	const [rows, setRows] = useState(generateRows(3));
 	const [groups, setGroups] = useState(generateGroups(3, range));
 
 	const onResizeEnd = useCallback((event: ResizeEndEvent) => {
@@ -42,6 +37,7 @@ function App() {
 	}, []);
 
 	const onDragEnd = useCallback((event: DragEndEvent) => {
+		console.log(event)
 		const overedId = event.over?.id as string;
 
 		if (!overedId) return;
@@ -64,11 +60,15 @@ function App() {
 			// 	}),
 			// );
 		} else if (activeItemType === ItemType.SidebarItem) {
-			setRows((prev) => {
-				const oldIndex = prev.findIndex((row) => row.id === activeId);
-				const newIndex = prev.findIndex((row) => row.id === overedId);
-
-				return arrayMove(prev, oldIndex, newIndex);
+			const groupId = event.active.data.current.groupId;
+			setGroups((prev) => {
+				const groups = [...prev]
+				const groupIndex = groups.findIndex((group) => group.id === groupId);
+				const oldIndex = groups[groupIndex].flights.findIndex((flight) => flight.id === activeId);
+				const newIndex = groups[groupIndex].flights.findIndex((flight) => flight.id === overedId);
+				console.log('called', oldIndex, newIndex, groups)
+				groups[groupIndex].flights = arrayMove(groups[groupIndex].flights, oldIndex, newIndex);
+				return groups
 			});
 		}
 	}, []);

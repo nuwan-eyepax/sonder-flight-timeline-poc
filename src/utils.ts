@@ -1,4 +1,4 @@
-import { format, hoursToMilliseconds, minutesToMilliseconds } from "date-fns";
+import { format, hoursToMilliseconds, minutesToMilliseconds, startOfMonth, startOfWeek } from "date-fns";
 import type { ItemDefinition, Range, RowDefinition, Span } from "dnd-timeline";
 import { nanoid } from "nanoid";
 import { MarkerDefinition } from "./TimeAxis";
@@ -45,28 +45,12 @@ export const generateFlightItems = (count: number, flightId: string, range: Rang
 		});
 };
 
-export const generateRows = (count: number, options?: GenerateRowsOptions) => {
-	return Array(count)
-		.fill(0)
-		.map((): RowDefinition => {
-			const disabled = options?.disabled;
-
-			let id = `row-${nanoid(4)}`;
-			if (disabled) id += " (disabled)";
-
-			return {
-				id,
-				disabled,
-			};
-		});
-};
-
 const getRandomInRange = (min: number, max: number) => {
 	return Math.random() * (max - min) + min;
 };
 
-const DEFAULT_MIN_LENGTH = minutesToMilliseconds(60);
-const DEFAULT_MAX_LENGTH = minutesToMilliseconds(360);
+const DEFAULT_MIN_LENGTH = hoursToMilliseconds(24);
+const DEFAULT_MAX_LENGTH = hoursToMilliseconds(24 * 28);
 
 export const generateRandomSpan = (
 	range: Range,
@@ -85,43 +69,7 @@ export const generateRandomSpan = (
 	};
 };
 
-interface GenerateItemsOptions {
-	disabled?: boolean;
-	background?: boolean;
-	minLength?: number;
-	maxLength?: number;
-}
 
-export const generateItems = (
-	count: number,
-	range: Range,
-	rows: RowDefinition[],
-	options?: GenerateItemsOptions,
-) => {
-	return Array(count)
-		.fill(0)
-		.map((): ItemDefinition => {
-			const row = rows[Math.ceil(Math.random() * rows.length - 1)];
-			const rowId = row.id;
-			const disabled = row.disabled || options?.disabled;
-
-			const span = generateRandomSpan(
-				range,
-				options?.minLength,
-				options?.maxLength,
-			);
-
-			let id = `item-${nanoid(4)}`;
-			if (disabled) id += " (disabled)";
-
-			return {
-				id,
-				rowId,
-				span,
-				disabled,
-			};
-		});
-};
 export enum ItemType {
 	ListItem = 0,
 	SidebarItem = 1,
@@ -135,47 +83,17 @@ export interface Flight extends RowDefinition {
 }
 export const timeAxisMarkers: MarkerDefinition[] = [
 	{
-		value: hoursToMilliseconds(24),
-		getLabel: (date: Date) => format(date, "E"),
+		value: 1000 * 60 * 60 * 24 * 7, // 1 week in milliseconds
+		getLabel: (time) => format(startOfWeek(time), 'MMM dd'),
 	},
 	{
-		value: hoursToMilliseconds(2),
-		minRangeSize: hoursToMilliseconds(24),
-		getLabel: (date: Date) => format(date, "k"),
+		value: 1000 * 60 * 60 * 24 * 30, // Approximate 1 month in milliseconds
+		getLabel: (time) => format(startOfMonth(time), 'MMMM'),
 	},
 	{
-		value: hoursToMilliseconds(1),
-		minRangeSize: hoursToMilliseconds(24),
-	},
-	{
-		value: hoursToMilliseconds(1),
-		maxRangeSize: hoursToMilliseconds(24),
-		getLabel: (date: Date) => format(date, "k"),
-	},
-	{
-		value: minutesToMilliseconds(30),
-		maxRangeSize: hoursToMilliseconds(24),
-		minRangeSize: hoursToMilliseconds(12),
-	},
-	{
-		value: minutesToMilliseconds(15),
-		maxRangeSize: hoursToMilliseconds(12),
-		getLabel: (date: Date) => format(date, "m"),
-	},
-	{
-		value: minutesToMilliseconds(5),
-		maxRangeSize: hoursToMilliseconds(6),
-		minRangeSize: hoursToMilliseconds(3),
-	},
-	{
-		value: minutesToMilliseconds(5),
-		maxRangeSize: hoursToMilliseconds(3),
-		getLabel: (date: Date) => format(date, "m"),
-	},
-	{
-		value: minutesToMilliseconds(1),
-		maxRangeSize: hoursToMilliseconds(2),
-	},
+		value: 1000 * 60 * 60 * 24 * 90, // Approximate 1 quarter in milliseconds
+		getLabel: (time) => `Q${Math.ceil((time.getMonth() + 1) / 3)} ${time.getFullYear()}`,
+	}
 ];
 interface Group {
 	id: string;

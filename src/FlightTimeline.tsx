@@ -38,7 +38,7 @@ function FlightTimeline(props: FlightTimelineProps) {
 					<FlightGroup id={group.id} key={group.id}>
 						<SortableContext items={group.flights.map(({ id }) => id)} strategy={verticalListSortingStrategy}>
 							{group.flights.map((flight) => (
-								<Flight id={flight.id} key={flight.id} sidebar={<Sidebar row={flight} />}>
+								<Flight id={flight.id} key={flight.id} sidebar={<Sidebar row={flight}  groupId={flight.groupId}/>}>
 
 									{flight.items.map((item) => (
 										<FlightItem id={item.id} key={item.id} span={item.span}>

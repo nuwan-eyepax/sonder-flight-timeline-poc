@@ -5,11 +5,12 @@ import { ItemType } from "./utils";
 
 interface SidebarProps {
 	row: RowDefinition;
+	groupId: string;
 }
 
 function Sidebar(props: SidebarProps) {
 	const { attributes, listeners, setNodeRef, transform, transition } =
-		useSortable({ id: props.row.id, data: { type: ItemType.SidebarItem } });
+		useSortable({ id: props.row.id, data: { type: ItemType.SidebarItem, groupId: props.groupId } });
 
 	const style = {
 		transition,

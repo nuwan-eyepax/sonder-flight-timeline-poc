@@ -1,6 +1,5 @@
 import React, { useMemo, memo } from "react";
-
-import { minutesToMilliseconds } from "date-fns";
+import { format, startOfWeek, startOfMonth, startOfQuarter, addWeeks, addMonths, addQuarters } from "date-fns";
 import { useTimelineContext } from "dnd-timeline";
 
 interface Marker {
@@ -10,7 +9,7 @@ interface Marker {
 }
 
 export interface MarkerDefinition {
-	value: number;
+	value: number; // This represents the time in milliseconds
 	maxRangeSize?: number;
 	minRangeSize?: number;
 	getLabel?: (time: Date) => string;
@@ -29,33 +28,26 @@ function TimeAxis(props: TimeAxisProps) {
 	const markers = useMemo(() => {
 		const sortedMarkers = [...props.markers];
 		sortedMarkers.sort((a, b) => b.value - a.value);
-
 		const delta = sortedMarkers[sortedMarkers.length - 1].value;
-
 		const rangeSize = range.end - range.start;
-
-		const startTime = Math.floor(range.start / delta) * delta;
-
+		let startTime = Math.floor(range.start / delta) * delta;
 		const endTime = range.end;
-		const timezoneOffset = minutesToMilliseconds(
-			new Date().getTimezoneOffset(),
-		);
+		// const timezoneOffset = new Date().getUTCMinutes() * 60 * 1000;
 
 		const markerSideDeltas: Marker[] = [];
 
 		for (let time = startTime; time <= endTime; time += delta) {
 			const multiplierIndex = sortedMarkers.findIndex(
 				(marker) =>
-					(time - timezoneOffset) % marker.value === 0 &&
+					(time) % marker.value === 0 &&
 					(!marker.maxRangeSize || rangeSize <= marker.maxRangeSize) &&
 					(!marker.minRangeSize || rangeSize >= marker.minRangeSize),
 			);
-
 			if (multiplierIndex === -1) continue;
 
 			const multiplier = sortedMarkers[multiplierIndex];
-
-			const label = multiplier.getLabel?.(new Date(time));
+			const adjustedTime = new Date(time); // Adjust time from epoch
+			const label = multiplier.getLabel?.(adjustedTime) || format(adjustedTime, "yyyy-MM-dd");
 
 			markerSideDeltas.push({
 				label,
@@ -66,7 +58,6 @@ function TimeAxis(props: TimeAxisProps) {
 
 		return markerSideDeltas;
 	}, [range, valueToPixels, props.markers]);
-
 	return (
 		<div
 			style={{
