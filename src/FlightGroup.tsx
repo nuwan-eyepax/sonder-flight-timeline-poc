@@ -1,10 +1,10 @@
-import React from "react";
+import React, { memo } from "react";
 
 export interface FlightGroupProps {
 	children: React.ReactNode;
 	id: string;
 }
-export function FlightGroup(props: FlightGroupProps) {
+const  FlightGroup = (props: FlightGroupProps)=> {
 	// const groupedSubrows = useMemo(
 	// 	() => groupItemsToSubrows(props.items, range),
 	// 	[props.items, range],
@@ -13,3 +13,4 @@ export function FlightGroup(props: FlightGroupProps) {
 	return <div style={{ display: 'flex', flexDirection: "column" }}><div>
 		Flight Group :{props.id}</div> {props.children}</div>
 }
+export default memo(FlightGroup)

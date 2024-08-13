@@ -47,7 +47,7 @@ function TimeAxis(props: TimeAxisProps) {
 
 			const multiplier = sortedMarkers[multiplierIndex];
 			const adjustedTime = new Date(time); // Adjust time from epoch
-			const label = multiplier.getLabel?.(adjustedTime) || format(adjustedTime, "yyyy-MM-dd");
+			const label = multiplier.getLabel?.(adjustedTime);
 
 			markerSideDeltas.push({
 				label,
@@ -61,45 +61,58 @@ function TimeAxis(props: TimeAxisProps) {
 	return (
 		<div
 			style={{
-				height: "20px",
+				height: "50px",
 				position: "relative",
 				overflow: "hidden",
 				[side === "right" ? "marginRight" : "marginLeft"]: `${sidebarWidth}px`,
 			}}
 		>
-			{markers.map((marker, index) => (
-				<div
-					key={`${marker.sideDelta}-${index}`}
-					style={{
-						position: "absolute",
-						bottom: 0,
-						display: "flex",
-						flexDirection: "row",
-						justifyContent: "flex-start",
-						alignItems: "flex-end",
-						height: "100%",
-						[side]: `${marker.sideDelta}px`,
-					}}
-				>
+			<div >
+				<div style={{ textAlign: 'center', position :"fixed", left: "0px", padding : "5px",width : `${sidebarWidth}px` }}>
+					<span style={{ marginRight: "10px" }}>
+						{new Date((range).start).toLocaleDateString()}
+					</span>
+					<span>
+						{new Date((range).end).toLocaleDateString()}
+					</span>
+				</div>
+			</div>
+			<div style={{ display: "block" }}> 
+				{markers.map((marker, index) => (
 					<div
+						key={`${marker.sideDelta}-${index}`}
 						style={{
-							width: "1px",
-							height: `${100 * marker.heightMultiplier}%`,
+							position: "absolute",
+							bottom: 0,
+							display: "flex",
+							flexDirection: "row",
+							justifyContent: "flex-start",
+							alignItems: "flex-end",
+							height: "100%",
+							[side]: `${marker.sideDelta}px`,
 						}}
-					/>
-					{marker.label ? (
+					>
 						<div
 							style={{
-								paddingLeft: "3px",
-								alignSelf: "flex-start",
-								fontWeight: marker.heightMultiplier * 1000,
+								width: "1px",
+								height: `${100 * marker.heightMultiplier}%`,
+								backgroundColor: "red", // Vertical line color
 							}}
-						>
-							{marker.label}
-						</div>
-					) : null}
-				</div>
-			))}
+						/>
+						{marker.label ? (
+							<div
+								style={{
+									paddingLeft: "3px",
+									alignSelf: "flex-start",
+									fontWeight: marker.heightMultiplier * 1000,
+								}}
+							>
+								{marker.label}
+							</div>
+						) : null}
+					</div>
+				))}
+			</div>
 		</div>
 	);
 }

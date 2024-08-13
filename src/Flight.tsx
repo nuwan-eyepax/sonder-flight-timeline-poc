@@ -3,6 +3,7 @@ import { useRow } from "dnd-timeline";
 import type React from "react";
 import { restrictToHorizontalAxis } from '@dnd-kit/modifiers';
 import { DndContext } from '@dnd-kit/core';
+import { memo } from "react";
 
 interface FlightProps extends RowDefinition {
 	children: React.ReactNode;
@@ -17,19 +18,16 @@ function Flight(props: FlightProps) {
 		rowStyle,
 		rowSidebarStyle,
 	} = useRow({ id: props.id });
-
 	return (
-		<div style={{ ...rowWrapperStyle, minHeight: 20, background: "gray" }}>
+		<div style={{ ...rowWrapperStyle, minHeight: 20, background: "gray", border: "1px solid", marginBottom: "2px" }}>
 			<div ref={setSidebarRef} style={rowSidebarStyle}>
 				{props.sidebar}
 			</div>
-			<div ref={setNodeRef} style={{ ...rowStyle, border: "1px solid", }}>
-				{/* <DndContext modifiers={[restrictToHorizontalAxis]}> */}
-					{props.children}
-				{/* </DndContext> */}
+			<div ref={setNodeRef} style={{ ...rowStyle, }}>
+				{props.children}
 			</div>
 		</div>
 	);
 }
 
-export default Flight;
+export default memo(Flight);

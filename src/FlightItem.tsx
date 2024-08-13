@@ -2,6 +2,7 @@ import { useItem } from "dnd-timeline";
 import type { Span } from "dnd-timeline";
 import type React from "react";
 import { ItemType } from "./utils";
+import { memo } from "react";
 
 interface ItemProps {
 	id: string;
@@ -20,7 +21,6 @@ function FlightItem(props: ItemProps) {
 				groupId: props.groupId
 			}
 		});
-
 	return (
 		<div ref={setNodeRef} style={itemStyle} {...listeners} {...attributes}>
 			<div style={itemContentStyle}>
@@ -40,4 +40,4 @@ function FlightItem(props: ItemProps) {
 	);
 }
 
-export default FlightItem;
+export default memo(FlightItem);
