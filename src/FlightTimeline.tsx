@@ -1,56 +1,34 @@
-import React, { useEffect, useMemo, useState } from "react";
-import { groupItemsToRows, groupItemsToSubrows, Span, Range, useTimelineContext } from "dnd-timeline";
+import React, { useState } from "react";
+import { Span, useTimelineContext, ItemDefinition } from "dnd-timeline";
 import FlightItem from "./FlightItem";
 import Flight from "./Flight";
-import Sidebar from "./Sidebar";
 import TimeAxis from "./TimeAxis";
 import {
 	SortableContext,
 	verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import FlightGroup from "./FlightGroup";
-import { timeAxisMarkers } from "./utils";
+import { Group, timeAxisMarkers } from "./utils";
 
-interface FlightTimelineProps {
-	groups: {
-		id: string;
-		flights: {
-			id: string;
-			groupId: string;
-			items: {
-				id: string;
-				flightId: string;
-				span: any
-			}[]
-		}[]
-	}[],
+
+export interface FlightTimelineProps {
+	groups: Group[],
 	onChangeView: (view: string) => void
+	onCreateFlightItem: (item: FlightItemDefinition) => void
+	onRemoveFlightItem: (item: FlightItemDefinition) => void
 }
 
-const findItemSpanWithinRange = (itemSpan: Span, range: Range): Span | null => {
-	const { start: itemStart, end: itemEnd } = itemSpan;
-	const { start: rangeStart, end: rangeEnd } = range;
-
-	// Check if the item's span is completely outside the range
-	if (itemEnd <= rangeStart || itemStart >= rangeEnd) {
-		return null; // The item is outside the range
-	}
-
-	// Calculate the overlap
-	const start = Math.max(itemStart, rangeStart);
-	const end = Math.min(itemEnd, rangeEnd);
-
-	return { start, end };
-};
+export type FlightItemDefinition = Omit<ItemDefinition, 'rowId'> & { groupId: string, flightId: string };
 
 function FlightTimeline(props: FlightTimelineProps) {
-	const { setTimelineRef, style, range } = useTimelineContext();
-	const [view, setView] = useState('quarter'); // Default to week view
-
+	const { onChangeView, onCreateFlightItem, onRemoveFlightItem } = props;
+	const { setTimelineRef, style } = useTimelineContext();
+	const [view, setView] = useState('week'); // Default to week view
 	const handleViewChange = (newView: string) => {
 		setView(newView);
-		props.onChangeView(newView)
+		onChangeView(newView)
 	};
+
 	return (
 		<div>
 			<div>
@@ -64,10 +42,16 @@ function FlightTimeline(props: FlightTimelineProps) {
 					<FlightGroup id={group.id} key={group.id}>
 						<SortableContext items={group.flights.map(({ id }) => id)} strategy={verticalListSortingStrategy}>
 							{group.flights.map((flight) => (
-								<Flight id={flight.id} key={flight.id} sidebar={<Sidebar row={flight} groupId={flight.groupId} />}>
-
+								<Flight
+									id={flight.id}
+									key={flight.id}
+									groupId={flight.groupId}
+									markers={timeAxisMarkers[view]}
+									onCreateFlightItem={onCreateFlightItem}
+									onRemoveFlightItem={onRemoveFlightItem}
+								>
 									{flight.items.map((item) => (
-										<FlightItem id={item.id} key={item.id} span={item.span} groupId={flight.groupId}>
+										<FlightItem id={item.id} key={item.id} span={item.span} groupId={flight.groupId} isCreating={item.isCreating}>
 											<div style={{ textAlign: 'center' }}>
 												<span style={{ marginRight: "10px" }}>
 													{new Date((item.span as Span).start).toLocaleDateString()}
@@ -79,7 +63,6 @@ function FlightTimeline(props: FlightTimelineProps) {
 											</div>
 										</FlightItem>
 									))}
-
 								</Flight>
 							))}
 						</SortableContext>

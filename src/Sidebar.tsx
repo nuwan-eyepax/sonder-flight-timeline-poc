@@ -24,7 +24,7 @@ function Sidebar(props: SidebarProps) {
 
 	return (
 		<div ref={setNodeRef} style={style} {...attributes} {...listeners}>
-			{`Row ${props.row.id}`}
+			{`Flight ${props.row.id}`}
 		</div>
 	);
 }

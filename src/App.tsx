@@ -1,13 +1,13 @@
 import "./index.css";
-import { endOfDay, startOfDay } from "date-fns";
-import type { DragEndEvent, Range, ResizeEndEvent } from "dnd-timeline";
+import { endOfDay, endOfMonth, endOfWeek, startOfDay, startOfMonth, startOfWeek } from "date-fns";
+import type { DragEndEvent, ItemDefinition, Range, ResizeEndEvent } from "dnd-timeline";
 import { TimelineContext } from "dnd-timeline";
 import React, { useCallback, useEffect, useState } from "react";
-import Timeline from "./FlightTimeline";
+import Timeline, { FlightItemDefinition } from "./FlightTimeline";
 import { generateGroups, isOverlapping, ItemType, roundToNearestDay } from "./utils";
 import { arrayMove } from "@dnd-kit/sortable";
 import { Modifier } from "@dnd-kit/core";
-import { restrictToHorizontalAxis, restrictToVerticalAxis } from "@dnd-kit/modifiers";
+import { restrictToHorizontalAxis } from "@dnd-kit/modifiers";
 
 const restrictFlightControl: Modifier = ({ active, ...rest }) => {
 	const activeItemType = active?.data.current?.type as ItemType;
@@ -22,8 +22,8 @@ const restrictFlightControl: Modifier = ({ active, ...rest }) => {
 }
 const now = new Date()
 const DEFAULT_RANGE: Range = {
-	start: startOfDay(now).valueOf(),
-	end: endOfDay(now.setMonth(now.getMonth() + 3)).valueOf(),
+	start: startOfMonth(now).getTime(),
+	end: endOfMonth(now).getTime(),
 };
 export function useDebounce<T>(value: T, delay = 500) {
 	const [debouncedValue, setDebouncedValue] = useState(value);
@@ -41,7 +41,7 @@ export function useDebounce<T>(value: T, delay = 500) {
 	return debouncedValue;
 }
 
-const initGroups = generateGroups(3, DEFAULT_RANGE);
+const initGroups = generateGroups(1, DEFAULT_RANGE);
 
 function App() {
 	const [range, setRange] = useState(DEFAULT_RANGE);
@@ -129,24 +129,54 @@ function App() {
 
 		if (view === 'quarter') {
 			setRange({
-				start: startOfDay(start).valueOf(),
-				end: endOfDay(start.setMonth(start.getMonth() + 3)).valueOf(),
+				start: startOfDay(start).getTime(),
+				end: endOfDay(start.setMonth(start.getMonth() + 3)).getTime(),
 			})
 		}
 		if (view === 'month') {
 			setRange({
-				start: startOfDay(start).valueOf(),
-				end: endOfDay(start.setMonth(start.getMonth() + 1)).valueOf(),
+				start: startOfDay(start).getTime(),
+				end: endOfDay(start.setMonth(start.getMonth() + 1)).getTime(),
 			})
 		}
 		if (view === 'week') {
 			setRange({
-				start: startOfDay(start).valueOf(),
-				end: endOfDay(start.setDate(start.getDate() + 7)).valueOf(),
+				start: startOfDay(start).getTime(),
+				end: endOfDay(start.setDate(start.getDate() + 7)).getTime(),
 			})
 		}
 	}, [range])
+	const onCreateFlightItem = ({id, flightId, groupId, span}: FlightItemDefinition) => {
+		setGroups((prev) => {
+			const groups = [...prev]
+			const groupIndex = groups.findIndex((group) => group.id === groupId);
+			const flightIndex = groups[groupIndex].flights.findIndex((flight) => flight.id === flightId);
+			const itemIndex = groups[groupIndex].flights[flightIndex].items.findIndex((item) => item.id === id);
+			const newItem = {
+				flightId: flightId,
+				id: id,
+				span: span,
+				isCreating: true
+			}
+			if(itemIndex === -1){
+				groups[groupIndex].flights[flightIndex].items.push(newItem)
 
+			}else {
+				groups[groupIndex].flights[flightIndex].items[itemIndex] = newItem;
+			}
+			return groups
+		});
+	};
+	const onRemoveFlightItem = ({id, groupId, flightId}: FlightItemDefinition) => {
+		setGroups((prev) => {
+			const groups = [...prev]
+			const groupIndex = groups.findIndex((group) => group.id === groupId);
+			const flightIndex = groups[groupIndex].flights.findIndex((flight) => flight.id === flightId);
+			const itemIndex = groups[groupIndex].flights[flightIndex].items.findIndex((item) => item.id === id);
+			groups[groupIndex].flights[flightIndex].items.splice(itemIndex, 1)
+			return groups
+		});
+	}
 	return (
 		<TimelineContext
 			range={range}
@@ -154,8 +184,15 @@ function App() {
 			onResizeEnd={onResizeEnd}
 			onRangeChanged={setRange}
 			modifiers={[restrictFlightControl]}
+			resizeHandleWidth={0}			
+
 		>
-			<Timeline groups={groups} onChangeView={onChangeView} />
+			<Timeline
+				groups={groups}
+				onChangeView={onChangeView}
+				onCreateFlightItem={onCreateFlightItem}
+				onRemoveFlightItem={onRemoveFlightItem}
+			/>
 		</TimelineContext>
 	);
 }

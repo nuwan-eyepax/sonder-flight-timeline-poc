@@ -9,10 +9,11 @@ interface ItemProps {
 	groupId: string;
 	span: Span;
 	children: React.ReactNode;
+	isCreating?: boolean
 }
 
 function FlightItem(props: ItemProps) {
-	const { setNodeRef, attributes, listeners, itemStyle, itemContentStyle } =
+	const { setNodeRef, attributes, listeners, itemStyle, itemContentStyle,  } =
 		useItem({
 			id: props.id,
 			span: props.span,
@@ -21,6 +22,7 @@ function FlightItem(props: ItemProps) {
 				groupId: props.groupId
 			}
 		});
+		console.log(itemStyle)
 	return (
 		<div ref={setNodeRef} style={itemStyle} {...listeners} {...attributes}>
 			<div style={itemContentStyle}>
@@ -30,7 +32,7 @@ function FlightItem(props: ItemProps) {
 						width: "100%",
 						overflow: "hidden",
 						color: "black",
-						background: "green",
+						background: props.isCreating ? "yellow" : "green",
 					}}
 				>
 					{props.children}

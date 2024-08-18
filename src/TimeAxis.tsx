@@ -1,6 +1,7 @@
 import React, { useMemo, memo } from "react";
 import { format, startOfWeek, startOfMonth, startOfQuarter, addWeeks, addMonths, addQuarters } from "date-fns";
 import { useTimelineContext } from "dnd-timeline";
+import { useMarkers } from "./useMarkers";
 
 interface Marker {
 	label?: string;
@@ -20,44 +21,10 @@ interface TimeAxisProps {
 }
 
 function TimeAxis(props: TimeAxisProps) {
-	const { range, direction, sidebarWidth, valueToPixels } =
+	const { direction, sidebarWidth } =
 		useTimelineContext();
-
 	const side = direction === "rtl" ? "right" : "left";
-
-	const markers = useMemo(() => {
-		const sortedMarkers = [...props.markers];
-		sortedMarkers.sort((a, b) => b.value - a.value);
-		const delta = sortedMarkers[sortedMarkers.length - 1].value;
-		const rangeSize = range.end - range.start;
-		let startTime = Math.floor(range.start / delta) * delta;
-		const endTime = range.end;
-		// const timezoneOffset = new Date().getUTCMinutes() * 60 * 1000;
-
-		const markerSideDeltas: Marker[] = [];
-
-		for (let time = startTime; time <= endTime; time += delta) {
-			const multiplierIndex = sortedMarkers.findIndex(
-				(marker) =>
-					(time) % marker.value === 0 &&
-					(!marker.maxRangeSize || rangeSize <= marker.maxRangeSize) &&
-					(!marker.minRangeSize || rangeSize >= marker.minRangeSize),
-			);
-			if (multiplierIndex === -1) continue;
-
-			const multiplier = sortedMarkers[multiplierIndex];
-			const adjustedTime = new Date(time); // Adjust time from epoch
-			const label = multiplier.getLabel?.(adjustedTime);
-
-			markerSideDeltas.push({
-				label,
-				heightMultiplier: 1 / (multiplierIndex + 1),
-				sideDelta: valueToPixels(time - range.start),
-			});
-		}
-
-		return markerSideDeltas;
-	}, [range, valueToPixels, props.markers]);
+	const { markers } = useMarkers(props.markers);
 	return (
 		<div
 			style={{
@@ -67,8 +34,8 @@ function TimeAxis(props: TimeAxisProps) {
 				[side === "right" ? "marginRight" : "marginLeft"]: `${sidebarWidth}px`,
 			}}
 		>
-			<div >
-				<div style={{ textAlign: 'center', position :"fixed", left: "0px", padding : "5px",width : `${sidebarWidth}px` }}>
+			{/* <div >
+				<div style={{ textAlign: 'center', position: "fixed", left: "0px", padding: "5px", width: `${sidebarWidth}px` }}>
 					<span style={{ marginRight: "10px" }}>
 						{new Date((range).start).toLocaleDateString()}
 					</span>
@@ -76,8 +43,8 @@ function TimeAxis(props: TimeAxisProps) {
 						{new Date((range).end).toLocaleDateString()}
 					</span>
 				</div>
-			</div>
-			<div style={{ display: "block" }}> 
+			</div> */}
+			<div>
 				{markers.map((marker, index) => (
 					<div
 						key={`${marker.sideDelta}-${index}`}

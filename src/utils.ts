@@ -1,4 +1,4 @@
-import { format, hoursToMilliseconds, startOfMonth, startOfWeek } from "date-fns";
+import { format, hoursToMilliseconds, startOfDay, startOfMonth, startOfWeek } from "date-fns";
 import type { ItemDefinition, Range, RowDefinition, Span } from "dnd-timeline";
 import { nanoid } from "nanoid";
 import { MarkerDefinition } from "./TimeAxis";
@@ -21,7 +21,7 @@ export const generateFlights = (count: number, groupId: string, range: Range) =>
 			return {
 				id,
 				groupId,
-				items: generateFlightItems(Math.floor(Math.random() * 5), id, range)
+				items: []
 			};
 		});
 };
@@ -69,8 +69,8 @@ const DEFAULT_MAX_LENGTH = hoursToMilliseconds(24 * 60);
 
 export function roundToNearestDay(epochTime: number): number {
 	const date = new Date(epochTime);
-	const startOfDay = new Date(date.setHours(0, 0, 0, 0)).valueOf();
-	const endOfDay = new Date(startOfDay).setHours(23, 59, 59, 999).valueOf();
+	const startOfDay = new Date(date.setHours(0, 0, 0, 0)).getTime();
+	const endOfDay = new Date(new Date(startOfDay).setHours(23, 59, 59, 999)).getTime();
 
 	// Get milliseconds since start of the day
 	const millisecondsSinceStart = epochTime - startOfDay;
@@ -107,22 +107,30 @@ export enum ItemType {
 	SidebarItem = 1,
 	FlightRow = 2
 }
-export interface FlightItem extends ItemDefinition {
+// Constants for milliseconds in days, weeks, and months
+const DAY_IN_MS = 1000 * 60 * 60 * 24; // 1 day in milliseconds
+const WEEK_IN_MS = 1000 * 60 * 60 * 24 * 7; // 1 week in milliseconds
+const MONTH_IN_MS = 1000 * 60 * 60 * 24 * 30; // Approximate 1 month in milliseconds
 
-}
-export interface Flight extends RowDefinition {
-	items: ItemDefinition[];
-}
 export const timeAxisMarkers: { [key: string]: MarkerDefinition[] } = {
 	week: [
 		{
-			value: 1000 * 60 * 60 * 24, // 1 day in milliseconds
+			value: DAY_IN_MS, // 1 day in milliseconds
+			minRangeSize: DAY_IN_MS, // Show for ranges >= 1 day
+			maxRangeSize: DAY_IN_MS * 30, // Show for ranges <= 30 days
+			getLabel: (time) => format(startOfDay(time), 'dd MMM'), // Day of the month and month
 		},
 		{
-			value: 1000 * 60 * 60 * 24 * 7, // 1 week in milliseconds
-			minRangeSize: 1000 * 60 * 60 * 24 * 7, // Show for ranges >= 1 week
-			maxRangeSize: 1000 * 60 * 60 * 24 * 60, // Show for ranges <= 2 months
-			getLabel: (time) => format(startOfWeek(time), 'MMM dd'),
+			value: WEEK_IN_MS, // 1 week in milliseconds
+			minRangeSize: WEEK_IN_MS, // Show for ranges >= 1 week
+			maxRangeSize: WEEK_IN_MS * 8, // Show for ranges <= 8 weeks (about 2 months)
+			getLabel: (time) => format(startOfWeek(time), 'MMM dd'), // Month and day of the week
+		},
+		{
+			value: MONTH_IN_MS, // 1 month in milliseconds (approximate)
+			minRangeSize: MONTH_IN_MS, // Show for ranges >= 1 month
+			maxRangeSize: MONTH_IN_MS * 6, // Show for ranges <= 6 months
+			getLabel: (time) => format(startOfMonth(time), 'MMM yyyy'), // Month and year
 		}
 	],
 	month: [{
@@ -152,7 +160,7 @@ export const timeAxisMarkers: { [key: string]: MarkerDefinition[] } = {
 	}]
 }
 
-interface Group {
+export interface Group {
 	id: string;
 	flights: {
 		id: string;
@@ -160,7 +168,8 @@ interface Group {
 		items: {
 			id: string;
 			flightId: string;
-			span: any
+			span: Span,
+			isCreating: boolean
 		}[]
 	}[]
 }
