@@ -1,10 +1,10 @@
 import "./index.css";
-import { endOfDay, endOfMonth, endOfWeek, startOfDay, startOfMonth, startOfWeek } from "date-fns";
-import type { DragEndEvent, ItemDefinition, Range, ResizeEndEvent } from "dnd-timeline";
-import { TimelineContext } from "dnd-timeline";
-import React, { useCallback, useEffect, useState } from "react";
+import { endOfDay, endOfMonth, startOfDay, startOfMonth } from "date-fns";
+import type { DragEndEvent, Range, ResizeEndEvent, UsePanStrategy } from "dnd-timeline";
+import { TimelineContext, useDragStrategy, useWheelStrategy } from "dnd-timeline";
+import React, { useCallback, useState } from "react";
 import Timeline, { FlightItemDefinition } from "./FlightTimeline";
-import { generateGroups, isOverlapping, ItemType, roundToNearestDay } from "./utils";
+import { generateGroups, isOverlapping, ItemType, timeAxisMarkers } from "./utils";
 import { arrayMove } from "@dnd-kit/sortable";
 import { Modifier } from "@dnd-kit/core";
 import { restrictToHorizontalAxis } from "@dnd-kit/modifiers";
@@ -12,9 +12,6 @@ import { restrictToHorizontalAxis } from "@dnd-kit/modifiers";
 const restrictFlightControl: Modifier = ({ active, ...rest }) => {
 	const activeItemType = active?.data.current?.type as ItemType;
 
-	// if (activeItemType === ItemType.SidebarItem) {
-	// 	return restrictToVerticalAxis({ ...rest, active })
-	// }
 	if (activeItemType === ItemType.ListItem) {
 		return restrictToHorizontalAxis({ ...rest, active })
 	}
@@ -25,32 +22,32 @@ const DEFAULT_RANGE: Range = {
 	start: startOfMonth(now).getTime(),
 	end: endOfMonth(now).getTime(),
 };
-export function useDebounce<T>(value: T, delay = 500) {
-	const [debouncedValue, setDebouncedValue] = useState(value);
-
-	useEffect(() => {
-		const handler = setTimeout(() => {
-			setDebouncedValue(value);
-		}, delay);
-
-		return () => {
-			clearTimeout(handler);
-		};
-	}, [value, delay]);
-
-	return debouncedValue;
-}
-
 const initGroups = generateGroups(1, DEFAULT_RANGE);
-
 function App() {
 	const [range, setRange] = useState(DEFAULT_RANGE);
 	const [groups, setGroups] = useState(initGroups);
+	const [isItemResizing, setIsItemResizing] = useState(false);
+	const [isItemDragging, setIsItemDragging] = useState(false);
+	const [view, setView] = useState('week');
+
+	const onResizeStart = () => {
+		setIsItemResizing(true);
+	};
+
+	const onDragStart = () => {
+		setIsItemDragging(true)
+	}
 
 	const onResizeEnd = useCallback((event: ResizeEndEvent) => {
 		const updatedSpan =
 			event.active.data.current.getSpanFromResizeEvent?.(event);
-		if (!updatedSpan) return;
+		if (!updatedSpan)
+			return;
+		const delta = event.active.data.current.delta as number;
+		const modifiedSpan = {
+			start: Math.floor(updatedSpan?.start / delta) * delta,
+			end: Math.ceil(updatedSpan?.end / delta) * delta
+		}
 		const activeItemId = event.active.id;
 		const groupId = event.active.data.current.groupId;
 		const activeItemType = event.active.data.current.type as ItemType;
@@ -65,10 +62,7 @@ function App() {
 							if (item.id !== activeItemId) return item;
 							return {
 								...item,
-								span: {
-									start: roundToNearestDay(updatedSpan.start),
-									end: roundToNearestDay(updatedSpan.end)
-								},
+								span: modifiedSpan,
 							};
 						})
 					}
@@ -77,6 +71,7 @@ function App() {
 				return groups
 			});
 		}
+		setIsItemResizing(false);
 	}, []);
 
 	const onDragEnd = useCallback((event: DragEndEvent) => {
@@ -84,14 +79,22 @@ function App() {
 		if (!overedId) return;
 		const activeId = event.active.id;
 		const activeItemType = event.active.data.current.type as ItemType;
-		const updatedSpan = event.active.data.current.getSpanFromDragEvent?.(event);
 		const groupId = event.active.data.current.groupId;
-		if (updatedSpan && activeItemType === ItemType.ListItem) {
+		if (activeItemType === ItemType.ListItem) {
+			const delta = event.active.data.current.delta as number;
+			const updatedSpan = event.active.data.current.getSpanFromDragEvent?.(event);
+			if (!updatedSpan) {
+				return;
+			}
+			const modifiedSpan = {
+				start: Math.round(updatedSpan.start / delta) * delta,
+				end: Math.round(updatedSpan.end / delta) * delta
+			}
 			setGroups((prev) => {
 				const groups = [...prev]
 				const groupIndex = groups.findIndex((group) => group.id === groupId);
 				groups[groupIndex].flights = groups[groupIndex].flights.map((flight) => {
-					const currentFlightSpans = flight.items.map(({ span }) => span);
+					const currentFlightSpans = flight.items.filter(({ id }) => activeId !== id).map(({ span }) => span);
 					return {
 						...flight,
 						items: flight.items.map((item) => {
@@ -101,8 +104,7 @@ function App() {
 								return item
 							return {
 								...item,
-								rowId: overedId,
-								span: updatedSpan,
+								span: modifiedSpan,
 							};
 
 						})
@@ -111,7 +113,8 @@ function App() {
 				})
 				return groups
 			});
-		} else if (activeItemType === ItemType.SidebarItem) {
+		}
+		if (activeItemType === ItemType.SidebarItem) {
 			setGroups((prev) => {
 				const groups = [...prev]
 				const groupIndex = groups.findIndex((group) => group.id === groupId);
@@ -121,6 +124,7 @@ function App() {
 				return groups
 			});
 		}
+		setIsItemDragging(false)
 	}, []);
 
 	const onChangeView = useCallback((view: string) => {
@@ -145,8 +149,9 @@ function App() {
 				end: endOfDay(start.setDate(start.getDate() + 7)).getTime(),
 			})
 		}
-	}, [range])
-	const onCreateFlightItem = ({id, flightId, groupId, span}: FlightItemDefinition) => {
+	}, [range]);
+
+	const onCreateFlightItem = useCallback(({ id, flightId, groupId, span }: FlightItemDefinition) => {
 		setGroups((prev) => {
 			const groups = [...prev]
 			const groupIndex = groups.findIndex((group) => group.id === groupId);
@@ -156,42 +161,54 @@ function App() {
 				flightId: flightId,
 				id: id,
 				span: span,
-				isCreating: true
+				isCreating: false
 			}
-			if(itemIndex === -1){
+			if (itemIndex === -1) {
 				groups[groupIndex].flights[flightIndex].items.push(newItem)
 
-			}else {
+			} else {
 				groups[groupIndex].flights[flightIndex].items[itemIndex] = newItem;
 			}
 			return groups
 		});
+	}, []);
+
+	const handleViewChange = (newView: string) => {
+		setView(newView);
+		onChangeView(newView)
 	};
-	const onRemoveFlightItem = ({id, groupId, flightId}: FlightItemDefinition) => {
-		setGroups((prev) => {
-			const groups = [...prev]
-			const groupIndex = groups.findIndex((group) => group.id === groupId);
-			const flightIndex = groups[groupIndex].flights.findIndex((flight) => flight.id === flightId);
-			const itemIndex = groups[groupIndex].flights[flightIndex].items.findIndex((item) => item.id === id);
-			groups[groupIndex].flights[flightIndex].items.splice(itemIndex, 1)
-			return groups
-		});
+
+	const moveTimeline = (deltaX: number) => {
+		setRange((prev)=>{
+			return {
+				start: prev.start + deltaX,
+				end: prev.end + deltaX
+			}
+		})
 	}
 	return (
 		<TimelineContext
 			range={range}
 			onDragEnd={onDragEnd}
+			onDragStart={onDragStart}
 			onResizeEnd={onResizeEnd}
+			onResizeStart={onResizeStart}
 			onRangeChanged={setRange}
 			modifiers={[restrictFlightControl]}
-			resizeHandleWidth={0}			
-
+			resizeHandleWidth={20}
+			// rangeGridSizeDefinition={200}
+			usePanStrategy={undefined}
+			overlayed={false}
 		>
+
 			<Timeline
 				groups={groups}
-				onChangeView={onChangeView}
 				onCreateFlightItem={onCreateFlightItem}
-				onRemoveFlightItem={onRemoveFlightItem}
+				handleViewChange={handleViewChange}
+				isItemDragging={isItemDragging}
+				isItemIsResizing={isItemResizing}
+				markers={timeAxisMarkers[view]}
+				moveTimeline={moveTimeline}
 			/>
 		</TimelineContext>
 	);

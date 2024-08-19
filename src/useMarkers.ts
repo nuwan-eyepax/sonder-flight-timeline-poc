@@ -1,7 +1,6 @@
 import { useTimelineContext } from "dnd-timeline";
 import { useMemo } from "react";
 import { MarkerDefinition } from "./TimeAxis";
-import { minutesToMilliseconds } from "date-fns";
 export interface Marker {
     label?: string;
     sideDelta: number;
@@ -21,16 +20,14 @@ export const useMarkers = (markerDefinitions: MarkerDefinition[]) => {
     const markers = useMemo(() => {
         const rangeSize = range.end - range.start;
         let startTime = Math.floor(range.start / delta) * delta;
-        console.log(startTime, range.start)
         const endTime = range.end;
 
-        const timezoneOffset = minutesToMilliseconds(
-            new Date().getTimezoneOffset(),
-        );
+        // const timezoneOffset = minutesToMilliseconds(
+        //     new Date().getTimezoneOffset(),
+        // );
         const markerSideDeltas: Marker[] = [];
 
         for (let time = startTime; time <= endTime; time += delta) {
-            console.log(new Date(time))
             const multiplierIndex = sortedMarkers.findIndex((marker) => {
                 const alignsWithInterval = (time) % marker.value === 0;
                 const withinMaxRange = !marker.maxRangeSize || rangeSize <= marker.maxRangeSize;

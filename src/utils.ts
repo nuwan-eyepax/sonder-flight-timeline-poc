@@ -1,5 +1,5 @@
 import { format, hoursToMilliseconds, startOfDay, startOfMonth, startOfWeek } from "date-fns";
-import type { ItemDefinition, Range, RowDefinition, Span } from "dnd-timeline";
+import type { Range, Span } from "dnd-timeline";
 import { nanoid } from "nanoid";
 import { MarkerDefinition } from "./TimeAxis";
 

@@ -1,13 +1,12 @@
-import React, { useMemo, memo } from "react";
-import { format, startOfWeek, startOfMonth, startOfQuarter, addWeeks, addMonths, addQuarters } from "date-fns";
+import React, {  memo } from "react";
 import { useTimelineContext } from "dnd-timeline";
 import { useMarkers } from "./useMarkers";
 
-interface Marker {
-	label?: string;
-	sideDelta: number;
-	heightMultiplier: number;
-}
+// interface Marker {
+// 	label?: string;
+// 	sideDelta: number;
+// 	heightMultiplier: number;
+// }
 
 export interface MarkerDefinition {
 	value: number; // This represents the time in milliseconds

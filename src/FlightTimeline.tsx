@@ -1,43 +1,49 @@
-import React, { useState } from "react";
-import { Span, useTimelineContext, ItemDefinition } from "dnd-timeline";
-import FlightItem from "./FlightItem";
+import React from "react";
+import { useTimelineContext, ItemDefinition } from "dnd-timeline";
 import Flight from "./Flight";
-import TimeAxis from "./TimeAxis";
+import TimeAxis, { MarkerDefinition } from "./TimeAxis";
 import {
 	SortableContext,
 	verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import FlightGroup from "./FlightGroup";
-import { Group, timeAxisMarkers } from "./utils";
+import { Group } from "./utils";
+import { useMarkers } from "./useMarkers";
 
 
 export interface FlightTimelineProps {
 	groups: Group[],
-	onChangeView: (view: string) => void
-	onCreateFlightItem: (item: FlightItemDefinition) => void
-	onRemoveFlightItem: (item: FlightItemDefinition) => void
+	isItemDragging: boolean;
+	isItemIsResizing: boolean;
+	markers: MarkerDefinition[];
+	onCreateFlightItem: (item: FlightItemDefinition) => void;
+	moveTimeline: (deltaX: number) => void
+	// moveRight: (deltaX: number) => void
+	handleViewChange: (view: string) => void
 }
 
 export type FlightItemDefinition = Omit<ItemDefinition, 'rowId'> & { groupId: string, flightId: string };
 
 function FlightTimeline(props: FlightTimelineProps) {
-	const { onChangeView, onCreateFlightItem, onRemoveFlightItem } = props;
+	const { onCreateFlightItem, isItemDragging, isItemIsResizing, markers, handleViewChange, moveTimeline} = props;
 	const { setTimelineRef, style } = useTimelineContext();
-	const [view, setView] = useState('week'); // Default to week view
-	const handleViewChange = (newView: string) => {
-		setView(newView);
-		onChangeView(newView)
-	};
-
+	const { delta } = useMarkers(markers);
 	return (
 		<div>
-			<div>
-				<button onClick={() => handleViewChange('week')}>Week</button>
-				<button onClick={() => handleViewChange('month')}>Month</button>
-				<button onClick={() => handleViewChange('quarter')}>Quarter</button>
+			<div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+				<div>
+					<button onClick={() => handleViewChange('week')}>Week</button>
+					<button onClick={() => handleViewChange('month')}>Month</button>
+					<button onClick={() => handleViewChange('quarter')}>Quarter</button>
+				</div>
+				<div>
+					<button onClick={() => moveTimeline(-delta)}>{`<<`}</button>
+					<button onClick={() => moveTimeline(+delta)}>{`>>`}</button>
+				</div>
 			</div>
-			<TimeAxis markers={timeAxisMarkers[view]} />
-			<div ref={setTimelineRef} style={style}>
+
+			<TimeAxis markers={markers} />
+			<div ref={setTimelineRef} style={{...style}}>
 				{props.groups.map((group) => (
 					<FlightGroup id={group.id} key={group.id}>
 						<SortableContext items={group.flights.map(({ id }) => id)} strategy={verticalListSortingStrategy}>
@@ -46,24 +52,11 @@ function FlightTimeline(props: FlightTimelineProps) {
 									id={flight.id}
 									key={flight.id}
 									groupId={flight.groupId}
-									markers={timeAxisMarkers[view]}
+									markers={markers}
 									onCreateFlightItem={onCreateFlightItem}
-									onRemoveFlightItem={onRemoveFlightItem}
-								>
-									{flight.items.map((item) => (
-										<FlightItem id={item.id} key={item.id} span={item.span} groupId={flight.groupId} isCreating={item.isCreating}>
-											<div style={{ textAlign: 'center' }}>
-												<span style={{ marginRight: "10px" }}>
-													{new Date((item.span as Span).start).toLocaleDateString()}
-												</span>
-
-												<span>
-													{new Date((item.span as Span).end).toLocaleDateString()}
-												</span>
-											</div>
-										</FlightItem>
-									))}
-								</Flight>
+									items={flight.items}
+									isUpdating={isItemDragging || isItemIsResizing}
+								/>
 							))}
 						</SortableContext>
 
