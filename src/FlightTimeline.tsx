@@ -9,6 +9,7 @@ import {
 import FlightGroup from "./FlightGroup";
 import { Group } from "./utils";
 import { useMarkers } from "./useMarkers";
+import TimeCursor from "./TimeCursor";
 
 
 export interface FlightTimelineProps {
@@ -43,6 +44,7 @@ function FlightTimeline(props: FlightTimelineProps) {
 			</div>
 
 			<TimeAxis markers={markers} />
+			
 			<div ref={setTimelineRef} style={{...style}}>
 				{props.groups.map((group) => (
 					<FlightGroup id={group.id} key={group.id}>

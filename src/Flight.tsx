@@ -8,6 +8,7 @@ import Sidebar from "./Sidebar";
 import { FlightItemDefinition } from "./FlightTimeline";
 import { nanoid } from "nanoid";
 import FlightItem from "./FlightItem";
+import { removeRandomItems } from "./utils";
 interface FlightProps extends RowDefinition {
 	markers: MarkerDefinition[];
 	groupId: string;
@@ -30,7 +31,7 @@ function Flight(props: FlightProps) {
 		rowStyle,
 		rowSidebarStyle,
 	} = useRow({ id });
-	const { pixelsToValue, range, sidebarWidth, } = useTimelineContext();
+	const { pixelsToValue, valueToPixels, range, sidebarWidth, } = useTimelineContext();
 	const { markers, delta } = useMarkers(markerDefs);
 	const [currentItem, setCurrentItem] = useState<FlightItemDefinition>();
 	const isOverlapping = useCallback((startValue: number) => {
@@ -90,55 +91,43 @@ function Flight(props: FlightProps) {
 	}, [currentItem, delta, isOverlapping, pixelsToValue, range.start, sidebarWidth]);
 	useEffect(() => {
 		setCurrentItem(undefined);
-	}, [isUpdating])
+	}, [isUpdating]);
+	const unavailableArea = markers[2]
 	return (
-		<div style={{ ...rowWrapperStyle, minHeight: 20, background: "gray", zIndex: 10, border: "1px solid", marginBottom: "1px" }}>
+		<div style={{ ...rowWrapperStyle, minHeight: 20, background: "gray", border: "1px solid", marginBottom: "1px" }}>
 			<div ref={setSidebarRef} style={{ ...rowSidebarStyle }} >
 				<Sidebar row={{ id }} groupId={groupId} />
 			</div>
-			<div ref={setNodeRef}
-				style={{ ...rowStyle }}
-			>
-				{/* {markers.map((marker, index) => (
+			<div ref={setNodeRef} style={{ ...rowStyle, position: 'relative' }}>
 					<div
-						key={`flight-${marker.sideDelta}-${index}`}
 						style={{
 							position: "absolute",
 							bottom: 0,
-							display: "flex",
-							flexDirection: "row",
-							justifyContent: "flex-start",
-							alignItems: "flex-end",
 							height: "100%",
-							marginLeft: `${marker.sideDelta}px`,
+							marginLeft: `${unavailableArea.sideDelta}px`,
+							width: `${valueToPixels(delta)}px`,
+							backgroundColor: "red",
+							opacity: 0.1
 						}}
-					>
-						<div
-							style={{
-								width: "1px",
-								height: `100%`,
-								backgroundColor: "red", // Vertical line color
-								zIndex: -1
-							}}
-						/>
+					/>
 
-					</div>
-				))} */}
 				<div
 					onMouseLeave={handleMouseLeaveFlight}
 					onMouseEnter={(e) => handleMouseOverFlight(e, groupId, id)}
 					onMouseMove={handleMouseMove}
 					onClick={handleClick}
-					style={{ width: '100%', height: "100%" }}
-				>	{currentItem && (
-					<FlightItem
-						id={currentItem.id}
-						span={currentItem.span}
-						groupId={currentItem.groupId}
-						key={currentItem.id}
-						isCreating
-						delta={delta}
-					/>)}
+					style={{ width: '100%', height: "100%", position: 'relative' }}
+				>
+					{currentItem && (
+						<FlightItem
+							id={currentItem.id}
+							span={currentItem.span}
+							groupId={currentItem.groupId}
+							key={currentItem.id}
+							isCreating
+							delta={delta}
+						/>
+					)}
 					{items.map((item) => (
 						<FlightItem
 							id={item.id}
@@ -150,8 +139,8 @@ function Flight(props: FlightProps) {
 						/>
 					))}
 				</div>
-
 			</div>
+
 		</div>
 	);
 }

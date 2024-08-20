@@ -53,7 +53,7 @@ function TimeCursor(props: TimeCursorProps) {
 			style={{
 				height: "100%",
 				width: "1px",
-				zIndex: 3,
+				zIndex: 2,
 				backgroundColor: "red",
 				position: "absolute",
 			}}
