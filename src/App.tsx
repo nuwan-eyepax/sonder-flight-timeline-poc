@@ -22,7 +22,7 @@ const DEFAULT_RANGE: Range = {
 	start: startOfMonth(now).getTime(),
 	end: endOfMonth(now).getTime(),
 };
-const initGroups = generateGroups(1, DEFAULT_RANGE);
+const initGroups = generateGroups(3, DEFAULT_RANGE);
 function App() {
 	const [range, setRange] = useState(DEFAULT_RANGE);
 	const [groups, setGroups] = useState(initGroups);

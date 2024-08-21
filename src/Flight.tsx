@@ -107,7 +107,8 @@ function Flight(props: FlightProps) {
 							marginLeft: `${unavailableArea.sideDelta}px`,
 							width: `${valueToPixels(delta)}px`,
 							backgroundColor: "red",
-							opacity: 0.1
+							opacity: 0.1,
+							zIndex :1
 						}}
 					/>
 

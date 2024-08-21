@@ -31,7 +31,7 @@ function FlightItem(props: ItemProps) {
 			color: 'white',
 			background: props.isCreating ? "rgba(46, 125, 50, 0.5)" : "#1B5E20", // Dark and ghostly when creating
 			border: props.isCreating ? '1px dashed #B2FF59' : "1px solid #004D40",
-			borderRadius: '10px',
+			borderRadius: '5px',
 			filter: props.isCreating ? 'blur(0.5px) brightness(1.1)' : 'brightness(1)',
 			transition: 'all 0.3s ease',
 			width: "100%",
@@ -41,7 +41,7 @@ function FlightItem(props: ItemProps) {
 			padding: '10px 15px',
 			display: 'flex',
 			alignItems: 'center',
-			justifyContent: 'space-between',
+			justifyContent: 'center',
 			fontSize: '0.7rem',
 		};
 	}, [props.isCreating]);
