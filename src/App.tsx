@@ -202,14 +202,13 @@ function App() {
 			usePanStrategy={undefined}
 			overlayed={false}
 		>
-			<TimelineGridProvider>
+			<TimelineGridProvider markerDefinitions={timeAxisMarkers[view]}>
 				<Timeline
 					groups={groups}
 					onCreateFlightItem={onCreateFlightItem}
 					handleViewChange={handleViewChange}
 					isItemDragging={isItemDragging}
 					isItemIsResizing={isItemResizing}
-					markers={timeAxisMarkers[view]}
 					moveTimeline={moveTimeline}
 				/>
 			</TimelineGridProvider>

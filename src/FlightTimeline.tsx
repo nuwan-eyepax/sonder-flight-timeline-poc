@@ -15,7 +15,6 @@ export interface FlightTimelineProps {
 	groups: Group[],
 	isItemDragging: boolean;
 	isItemIsResizing: boolean;
-	markers: MarkerDefinition[];
 	onCreateFlightItem: (item: FlightItemDefinition) => void;
 	moveTimeline: (deltaX: number) => void
 	handleViewChange: (view: string) => void
@@ -24,9 +23,9 @@ export interface FlightTimelineProps {
 export type FlightItemDefinition = Omit<ItemDefinition, 'rowId'> & { groupId: string, flightId: string };
 
 function FlightTimeline(props: FlightTimelineProps) {
-	const { onCreateFlightItem, isItemDragging, isItemIsResizing, markers, handleViewChange, moveTimeline} = props;
+	const { onCreateFlightItem, isItemDragging, isItemIsResizing,  handleViewChange, moveTimeline } = props;
 	const { setTimelineRef, style } = useTimelineContext();
-	const { delta } = useTimelineGridContext();
+	const { formatPeriod, setFormatPeriod } = useTimelineGridContext();
 	return (
 		<div>
 			<div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -36,14 +35,19 @@ function FlightTimeline(props: FlightTimelineProps) {
 					<button onClick={() => handleViewChange('quarter')}>Quarter</button>
 				</div>
 				<div>
-					<button onClick={() => moveTimeline(-delta)}>{`<<`}</button>
-					<button onClick={() => moveTimeline(+delta)}>{`>>`}</button>
+					<button onClick={() => setFormatPeriod(1)}> 1 Day</button>
+					<button onClick={() => setFormatPeriod(0.5)}>0.5 Days</button>
+					<button onClick={() => setFormatPeriod(2)}> 2 Days</button>
+				</div>
+				<div>
+					<button onClick={() => moveTimeline(-formatPeriod)}>{`<<`}</button>
+					<button onClick={() => moveTimeline(+formatPeriod)}>{`>>`}</button>
 				</div>
 			</div>
 
-			<TimeAxis markers={markers} />
-			
-			<div ref={setTimelineRef} style={{...style}}>
+			<TimeAxis/>
+
+			<div ref={setTimelineRef} style={{ ...style }}>
 				{props.groups.map((group) => (
 					<FlightGroup id={group.id} key={group.id}>
 						<SortableContext items={group.flights.map(({ id }) => id)} strategy={verticalListSortingStrategy}>
@@ -52,7 +56,6 @@ function FlightTimeline(props: FlightTimelineProps) {
 									id={flight.id}
 									key={flight.id}
 									groupId={flight.groupId}
-									markers={markers}
 									onCreateFlightItem={onCreateFlightItem}
 									items={flight.items}
 									isUpdating={isItemDragging || isItemIsResizing}

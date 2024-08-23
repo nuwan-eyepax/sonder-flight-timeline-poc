@@ -2,14 +2,12 @@ import type React from "react";
 import { memo, useCallback, useEffect, useState } from "react";
 import type { RowDefinition } from "dnd-timeline";
 import { useRow, useTimelineContext } from "dnd-timeline";
-import { MarkerDefinition } from "./TimeAxis";
 import Sidebar from "./Sidebar";
 import { FlightItemDefinition } from "./FlightTimeline";
 import { nanoid } from "nanoid";
 import FlightItem from "./BookingItem";
 import { useTimelineGridContext } from "./TimelineGridContext";
 interface FlightRowProps extends RowDefinition {
-	markers: MarkerDefinition[];
 	groupId: string;
 	onCreateFlightItem: (item: FlightItemDefinition) => void;
 	items: FlightItemDefinition[];
@@ -17,7 +15,7 @@ interface FlightRowProps extends RowDefinition {
 }
 
 const FlightRow = (props: FlightRowProps) => {
-	const { id, items, groupId, markers: markerDefs, onCreateFlightItem, isUpdating } = props;
+	const { id, items, groupId, onCreateFlightItem, isUpdating } = props;
 	const {
 		setNodeRef,
 		setSidebarRef,
@@ -26,7 +24,7 @@ const FlightRow = (props: FlightRowProps) => {
 		rowSidebarStyle,
 	} = useRow({ id });
 	const { pixelsToValue, range, sidebarWidth, } = useTimelineContext();
-	const { delta } = useTimelineGridContext();
+	const { formatPeriod } = useTimelineGridContext();
 	const [creatingItem, setCreatingItem] = useState<FlightItemDefinition>();
 	const isOverlapping = useCallback((startValue: number) => {
 		return items.findIndex(({ span }) => span.start === startValue) > -1
@@ -37,20 +35,20 @@ const FlightRow = (props: FlightRowProps) => {
 		}
 		const { clientX } = e;
 		const startDate = pixelsToValue(clientX - sidebarWidth) + range.start;
-		const start = Math.floor(startDate / delta) * delta;
+		const start = Math.floor(startDate / formatPeriod) * formatPeriod;
 		if (!isOverlapping(start)) {
 			const flightItem: FlightItemDefinition = {
 				id: `item-${nanoid(3)}`,
 				span: {
 					start: start,
-					end: start + delta
+					end: start + formatPeriod
 				},
 				groupId,
 				flightId,
 			}
 			setCreatingItem(flightItem);
 		}
-	}, [delta, isOverlapping, pixelsToValue, range.start, sidebarWidth, isUpdating]);
+	}, [formatPeriod, isOverlapping, pixelsToValue, range.start, sidebarWidth, isUpdating]);
 
 	const handleMouseLeaveFlight = useCallback(() => {
 		creatingItem && setCreatingItem(undefined);
@@ -63,7 +61,7 @@ const FlightRow = (props: FlightRowProps) => {
 		if (creatingItem) {
 			const { clientX } = e;
 			const startDate = pixelsToValue(clientX - sidebarWidth) + range.start;
-			const currentStart = Math.floor(startDate / delta) * delta;
+			const currentStart = Math.floor(startDate / formatPeriod) * formatPeriod;
 			if (creatingItem.span.start > currentStart) {
 				setCreatingItem(undefined);
 			} else {
@@ -74,7 +72,7 @@ const FlightRow = (props: FlightRowProps) => {
 								...prev,
 								span: {
 									start: prev.span.start,
-									end: currentStart + delta
+									end: currentStart + formatPeriod
 								}
 							}
 						}
@@ -82,7 +80,7 @@ const FlightRow = (props: FlightRowProps) => {
 				}
 			}
 		}
-	}, [creatingItem, delta, isOverlapping, pixelsToValue, range.start, sidebarWidth]);
+	}, [creatingItem, formatPeriod, isOverlapping, pixelsToValue, range.start, sidebarWidth]);
 	useEffect(() => {
 		setCreatingItem(undefined);
 	}, [isUpdating]);
@@ -106,7 +104,7 @@ const FlightRow = (props: FlightRowProps) => {
 							flightGroupId={creatingItem.groupId}
 							key={creatingItem.id}
 							isCreating
-							delta={delta}
+							delta={formatPeriod}
 							flightId={creatingItem.flightId} />
 					)}
 					{items.map((item) => (
@@ -115,7 +113,7 @@ const FlightRow = (props: FlightRowProps) => {
 							key={item.id}
 							span={item.span}
 							flightGroupId={groupId}
-							delta={delta}
+							delta={formatPeriod}
 							flightId={item.flightId}
 						/>
 					))}

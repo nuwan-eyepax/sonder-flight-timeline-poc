@@ -1,6 +1,7 @@
-import React, {  memo } from "react";
+import React, { memo } from "react";
 import { useTimelineContext } from "dnd-timeline";
 import { useMarkers } from "./useMarkers";
+import { useTimelineGridContext } from "./TimelineGridContext";
 
 // interface Marker {
 // 	label?: string;
@@ -15,15 +16,11 @@ export interface MarkerDefinition {
 	getLabel?: (time: Date) => string;
 }
 
-interface TimeAxisProps {
-	markers: MarkerDefinition[];
-}
-
-function TimeAxis(props: TimeAxisProps) {
+function TimeAxis() {
 	const { direction, sidebarWidth } =
 		useTimelineContext();
 	const side = direction === "rtl" ? "right" : "left";
-	const { markers } = useMarkers(props.markers);
+	const { markers } = useTimelineGridContext();
 	return (
 		<div
 			style={{
