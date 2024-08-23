@@ -49,6 +49,6 @@ export const useMarkers = (markerDefinitions: MarkerDefinition[]) => {
         }
 
         return markerSideDeltas;
-    }, [range.end, range.start, delta, sortedMarkers, valueToPixels,sidebarWidth]);
-    return { markers, delta };
+    }, [range.end, range.start, delta, sortedMarkers, valueToPixels, sidebarWidth]);
+    return { markers };
 };

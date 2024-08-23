@@ -2,6 +2,7 @@ import { format, hoursToMilliseconds, startOfDay, startOfMonth, startOfWeek } fr
 import type { Range, Span } from "dnd-timeline";
 import { nanoid } from "nanoid";
 import { MarkerDefinition } from "./TimeAxis";
+import { FlightItemDefinition } from "./FlightTimeline";
 
 export const generateGroups = (count: number, range: Range): Group[] => {
 	const groups = Array(count).fill(0).map(() => {
@@ -165,28 +166,22 @@ export interface Group {
 	flights: {
 		id: string;
 		groupId: string;
-		items: {
-			id: string;
-			flightId: string;
-			span: Span,
-			isCreating: boolean
-		}[]
+		items: FlightItemDefinition[]
 	}[]
 }
 
 export function removeRandomItems<T>(array: T[], numberOfItemsToRemove: number) {
 	// Clone the array to avoid modifying the original one
 	const arrayCopy = [...array];
-  
+
 	// Loop to remove the specified number of items
 	for (let i = 0; i < numberOfItemsToRemove; i++) {
-	  // Generate a random index
-	  const randomIndex = Math.floor(Math.random() * arrayCopy.length);
-  
-	  // Remove the item at the random index
-	  arrayCopy.splice(randomIndex, 1);
+		// Generate a random index
+		const randomIndex = Math.floor(Math.random() * arrayCopy.length);
+
+		// Remove the item at the random index
+		arrayCopy.splice(randomIndex, 1);
 	}
-  
+
 	return arrayCopy;
-  }
-  
+}

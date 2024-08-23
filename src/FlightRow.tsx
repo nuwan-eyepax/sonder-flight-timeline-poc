@@ -1,28 +1,22 @@
 import type React from "react";
 import { memo, useCallback, useEffect, useState } from "react";
-import type { RowDefinition, Span } from "dnd-timeline";
+import type { RowDefinition } from "dnd-timeline";
 import { useRow, useTimelineContext } from "dnd-timeline";
-import { useMarkers } from "./useMarkers";
 import { MarkerDefinition } from "./TimeAxis";
 import Sidebar from "./Sidebar";
 import { FlightItemDefinition } from "./FlightTimeline";
 import { nanoid } from "nanoid";
-import FlightItem from "./FlightItem";
-import { removeRandomItems } from "./utils";
-interface FlightProps extends RowDefinition {
+import FlightItem from "./BookingItem";
+import { useTimelineGridContext } from "./TimelineGridContext";
+interface FlightRowProps extends RowDefinition {
 	markers: MarkerDefinition[];
 	groupId: string;
 	onCreateFlightItem: (item: FlightItemDefinition) => void;
-	items: {
-		id: string;
-		flightId: string;
-		span: Span,
-		isCreating: boolean
-	}[];
+	items: FlightItemDefinition[];
 	isUpdating: boolean
 }
 
-function Flight(props: FlightProps) {
+const FlightRow = (props: FlightRowProps) => {
 	const { id, items, groupId, markers: markerDefs, onCreateFlightItem, isUpdating } = props;
 	const {
 		setNodeRef,
@@ -31,9 +25,9 @@ function Flight(props: FlightProps) {
 		rowStyle,
 		rowSidebarStyle,
 	} = useRow({ id });
-	const { pixelsToValue, valueToPixels, range, sidebarWidth, } = useTimelineContext();
-	const { markers, delta } = useMarkers(markerDefs);
-	const [currentItem, setCurrentItem] = useState<FlightItemDefinition>();
+	const { pixelsToValue, range, sidebarWidth, } = useTimelineContext();
+	const { delta } = useTimelineGridContext();
+	const [creatingItem, setCreatingItem] = useState<FlightItemDefinition>();
 	const isOverlapping = useCallback((startValue: number) => {
 		return items.findIndex(({ span }) => span.start === startValue) > -1
 	}, [items])
@@ -54,27 +48,27 @@ function Flight(props: FlightProps) {
 				groupId,
 				flightId,
 			}
-			setCurrentItem(flightItem);
+			setCreatingItem(flightItem);
 		}
 	}, [delta, isOverlapping, pixelsToValue, range.start, sidebarWidth, isUpdating]);
 
 	const handleMouseLeaveFlight = useCallback(() => {
-		currentItem && setCurrentItem(undefined);
-	}, [currentItem]);
+		creatingItem && setCreatingItem(undefined);
+	}, [creatingItem]);
 
 	const handleClick = useCallback(() => {
-		currentItem && onCreateFlightItem(currentItem);
-	}, [currentItem, onCreateFlightItem]);
+		creatingItem && onCreateFlightItem(creatingItem);
+	}, [creatingItem, onCreateFlightItem]);
 	const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-		if (currentItem) {
+		if (creatingItem) {
 			const { clientX } = e;
 			const startDate = pixelsToValue(clientX - sidebarWidth) + range.start;
 			const currentStart = Math.floor(startDate / delta) * delta;
-			if (currentItem.span.start > currentStart) {
-				setCurrentItem(undefined);
+			if (creatingItem.span.start > currentStart) {
+				setCreatingItem(undefined);
 			} else {
 				if (!isOverlapping(currentStart)) {
-					setCurrentItem((prev) => {
+					setCreatingItem((prev) => {
 						if (prev) {
 							return {
 								...prev,
@@ -88,30 +82,16 @@ function Flight(props: FlightProps) {
 				}
 			}
 		}
-	}, [currentItem, delta, isOverlapping, pixelsToValue, range.start, sidebarWidth]);
+	}, [creatingItem, delta, isOverlapping, pixelsToValue, range.start, sidebarWidth]);
 	useEffect(() => {
-		setCurrentItem(undefined);
+		setCreatingItem(undefined);
 	}, [isUpdating]);
-	const unavailableArea = markers[2]
 	return (
 		<div style={{ ...rowWrapperStyle, minHeight: 20, background: "gray", border: "1px solid", marginBottom: "1px" }}>
 			<div ref={setSidebarRef} style={{ ...rowSidebarStyle }} >
-				<Sidebar row={{ id }} groupId={groupId} />
+				<Sidebar flightId={id} flightGroupId={groupId} />
 			</div>
 			<div ref={setNodeRef} style={{ ...rowStyle, position: 'relative' }}>
-					<div
-						style={{
-							position: "absolute",
-							bottom: 0,
-							height: "100%",
-							marginLeft: `${unavailableArea.sideDelta}px`,
-							width: `${valueToPixels(delta)}px`,
-							backgroundColor: "red",
-							opacity: 0.1,
-							zIndex :1
-						}}
-					/>
-
 				<div
 					onMouseLeave={handleMouseLeaveFlight}
 					onMouseEnter={(e) => handleMouseOverFlight(e, groupId, id)}
@@ -119,24 +99,24 @@ function Flight(props: FlightProps) {
 					onClick={handleClick}
 					style={{ width: '100%', height: "100%", position: 'relative' }}
 				>
-					{currentItem && (
+					{creatingItem && (
 						<FlightItem
-							id={currentItem.id}
-							span={currentItem.span}
-							groupId={currentItem.groupId}
-							key={currentItem.id}
+							id={creatingItem.id}
+							span={creatingItem.span}
+							flightGroupId={creatingItem.groupId}
+							key={creatingItem.id}
 							isCreating
 							delta={delta}
-						/>
+							flightId={creatingItem.flightId} />
 					)}
 					{items.map((item) => (
 						<FlightItem
 							id={item.id}
 							key={item.id}
 							span={item.span}
-							groupId={groupId}
-							isCreating={item.isCreating}
+							flightGroupId={groupId}
 							delta={delta}
+							flightId={item.flightId}
 						/>
 					))}
 				</div>
@@ -146,4 +126,4 @@ function Flight(props: FlightProps) {
 	);
 }
 
-export default memo(Flight);
+export default memo(FlightRow);

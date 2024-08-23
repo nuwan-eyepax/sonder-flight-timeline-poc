@@ -1,6 +1,6 @@
 import React from "react";
 import { useTimelineContext, ItemDefinition } from "dnd-timeline";
-import Flight from "./Flight";
+import Flight from "./FlightRow";
 import TimeAxis, { MarkerDefinition } from "./TimeAxis";
 import {
 	SortableContext,
@@ -8,8 +8,7 @@ import {
 } from "@dnd-kit/sortable";
 import FlightGroup from "./FlightGroup";
 import { Group } from "./utils";
-import { useMarkers } from "./useMarkers";
-import TimeCursor from "./TimeCursor";
+import { useTimelineGridContext } from "./TimelineGridContext";
 
 
 export interface FlightTimelineProps {
@@ -19,7 +18,6 @@ export interface FlightTimelineProps {
 	markers: MarkerDefinition[];
 	onCreateFlightItem: (item: FlightItemDefinition) => void;
 	moveTimeline: (deltaX: number) => void
-	// moveRight: (deltaX: number) => void
 	handleViewChange: (view: string) => void
 }
 
@@ -28,7 +26,7 @@ export type FlightItemDefinition = Omit<ItemDefinition, 'rowId'> & { groupId: st
 function FlightTimeline(props: FlightTimelineProps) {
 	const { onCreateFlightItem, isItemDragging, isItemIsResizing, markers, handleViewChange, moveTimeline} = props;
 	const { setTimelineRef, style } = useTimelineContext();
-	const { delta } = useMarkers(markers);
+	const { delta } = useTimelineGridContext();
 	return (
 		<div>
 			<div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>

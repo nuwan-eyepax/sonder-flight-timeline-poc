@@ -4,15 +4,16 @@ import type { DragEndEvent, Range, ResizeEndEvent, UsePanStrategy } from "dnd-ti
 import { TimelineContext, useDragStrategy, useWheelStrategy } from "dnd-timeline";
 import React, { useCallback, useState } from "react";
 import Timeline, { FlightItemDefinition } from "./FlightTimeline";
-import { generateGroups, isOverlapping, ItemType, timeAxisMarkers } from "./utils";
+import { generateGroups, isOverlapping, timeAxisMarkers } from "./utils";
 import { arrayMove } from "@dnd-kit/sortable";
 import { Modifier } from "@dnd-kit/core";
 import { restrictToHorizontalAxis } from "@dnd-kit/modifiers";
+import { TimelineGridProvider } from "./TimelineGridContext";
 
 const restrictFlightControl: Modifier = ({ active, ...rest }) => {
-	const activeItemType = active?.data.current?.type as ItemType;
+	const activeItemType = active?.data.current?.type as string;
 
-	if (activeItemType === ItemType.ListItem) {
+	if (activeItemType === 'BOOKING_ITEM') {
 		return restrictToHorizontalAxis({ ...rest, active })
 	}
 	return rest.transform
@@ -49,9 +50,9 @@ function App() {
 			end: Math.ceil(updatedSpan?.end / delta) * delta
 		}
 		const activeItemId = event.active.id;
-		const groupId = event.active.data.current.groupId;
-		const activeItemType = event.active.data.current.type as ItemType;
-		if (updatedSpan && activeItemType === ItemType.ListItem) {
+		const groupId = event.active.data.current.flightGroupId;
+		const activeItemType = event.active.data.current.type as string;
+		if (updatedSpan && activeItemType === 'BOOKING_ITEM') {
 			setGroups((prev) => {
 				const groups = [...prev]
 				const groupIndex = groups.findIndex((group) => group.id === groupId);
@@ -78,9 +79,9 @@ function App() {
 		const overedId = event.over?.id as string;
 		if (!overedId) return;
 		const activeId = event.active.id;
-		const activeItemType = event.active.data.current.type as ItemType;
-		const groupId = event.active.data.current.groupId;
-		if (activeItemType === ItemType.ListItem) {
+		const activeItemType = event.active.data.current.type as string;
+		const groupId = event.active.data.current.flightGroupId;
+		if (activeItemType === 'BOOKING_ITEM') {
 			const delta = event.active.data.current.delta as number;
 			const updatedSpan = event.active.data.current.getSpanFromDragEvent?.(event);
 			if (!updatedSpan) {
@@ -114,7 +115,7 @@ function App() {
 				return groups
 			});
 		}
-		if (activeItemType === ItemType.SidebarItem) {
+		if (activeItemType === 'FLIGHT_SIDE_BAR') {
 			setGroups((prev) => {
 				const groups = [...prev]
 				const groupIndex = groups.findIndex((group) => group.id === groupId);
@@ -161,7 +162,8 @@ function App() {
 				flightId: flightId,
 				id: id,
 				span: span,
-				isCreating: false
+				isCreating: false,
+				groupId
 			}
 			if (itemIndex === -1) {
 				groups[groupIndex].flights[flightIndex].items.push(newItem)
@@ -179,7 +181,7 @@ function App() {
 	};
 
 	const moveTimeline = (deltaX: number) => {
-		setRange((prev)=>{
+		setRange((prev) => {
 			return {
 				start: prev.start + deltaX,
 				end: prev.end + deltaX
@@ -200,16 +202,19 @@ function App() {
 			usePanStrategy={undefined}
 			overlayed={false}
 		>
+			<TimelineGridProvider>
+				<Timeline
+					groups={groups}
+					onCreateFlightItem={onCreateFlightItem}
+					handleViewChange={handleViewChange}
+					isItemDragging={isItemDragging}
+					isItemIsResizing={isItemResizing}
+					markers={timeAxisMarkers[view]}
+					moveTimeline={moveTimeline}
+				/>
+			</TimelineGridProvider>
 
-			<Timeline
-				groups={groups}
-				onCreateFlightItem={onCreateFlightItem}
-				handleViewChange={handleViewChange}
-				isItemDragging={isItemDragging}
-				isItemIsResizing={isItemResizing}
-				markers={timeAxisMarkers[view]}
-				moveTimeline={moveTimeline}
-			/>
+
 		</TimelineContext>
 	);
 }
