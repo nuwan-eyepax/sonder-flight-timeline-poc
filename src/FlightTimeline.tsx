@@ -49,7 +49,7 @@ function FlightTimeline(props: FlightTimelineProps) {
 
 			<div ref={setTimelineRef} style={{ ...style }}>
 				{props.groups.map((group) => (
-					<FlightGroup id={group.id} key={group.id}>
+					<FlightGroup id={group.id} key={group.id} flights={group.flights}>
 						<SortableContext items={group.flights.map(({ id }) => id)} strategy={verticalListSortingStrategy}>
 							{group.flights.map((flight) => (
 								<Flight

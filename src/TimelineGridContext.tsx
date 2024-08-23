@@ -6,8 +6,9 @@ import { Marker } from "./useMarkers";
 interface TimelineGridContextInterface {
     formatPeriod: number;
     delta: number;
+    markers: Marker[];
+    gridMarkers: number[];
     setFormatPeriod: (value: number) => void;
-    markers: Marker[]
 }
 const DAY_IN_MS = 1000 * 60 * 60 * 24; // 1 day in milliseconds
 
@@ -22,13 +23,11 @@ export const useTimelineGridContext = () => {
 };
 
 export const TimelineGridProvider: React.FC<{ children: ReactNode, markerDefinitions: MarkerDefinition[] }> = ({ children, markerDefinitions }) => {
-
     const [formatPeriod, setFormatPeriod] = useState<number>(DAY_IN_MS);
-
     const handleFormatPeriod = (value: number) => {
         setFormatPeriod(value * DAY_IN_MS)
     }
-    const { range, valueToPixels, sidebarWidth } =
+    const { range, valueToPixels, sidebarWidth, pixelsToValue } =
         useTimelineContext();
     const sortedMarkers = useMemo(() => {
         const sortedMarkers = [...markerDefinitions];
@@ -42,10 +41,6 @@ export const TimelineGridProvider: React.FC<{ children: ReactNode, markerDefinit
         const rangeSize = range.end - range.start;
         let startTime = Math.floor(range.start / delta) * delta;
         const endTime = range.end;
-
-        // const timezoneOffset = minutesToMilliseconds(
-        //     new Date().getTimezoneOffset(),
-        // );
         const markerSideDeltas: Marker[] = [];
 
         for (let time = startTime; time <= endTime; time += delta) {
@@ -57,11 +52,9 @@ export const TimelineGridProvider: React.FC<{ children: ReactNode, markerDefinit
                 return alignsWithInterval && withinMaxRange && withinMinRange;
             });
             if (multiplierIndex === -1) continue;
-
             const multiplier = sortedMarkers[multiplierIndex];
             const adjustedTime = new Date(time); // Adjust time from epoch
             const label = multiplier.getLabel?.(adjustedTime);
-
             markerSideDeltas.push({
                 label,
                 heightMultiplier: 1 / (multiplierIndex + 1),
@@ -71,8 +64,21 @@ export const TimelineGridProvider: React.FC<{ children: ReactNode, markerDefinit
 
         return markerSideDeltas;
     }, [range.end, range.start, delta, sortedMarkers, valueToPixels, sidebarWidth]);
+    const gridMarkers = useMemo(() => {
+        const markerSideDeltas: number[] = [];
+        for (const marker of markers) {
+            const startTime = pixelsToValue(marker.sideDelta);
+            const endTime = startTime + delta;
+            for (let time = startTime; time <= endTime; time += formatPeriod) {
+                markerSideDeltas.push(valueToPixels(time)
+                );
+            }
+        }
+        return markerSideDeltas;
+    }, [delta, formatPeriod, markers, pixelsToValue, valueToPixels]);
+    console.log(gridMarkers)
     return (
-        <TimelineGridContext.Provider value={{ formatPeriod, delta, markers, setFormatPeriod: handleFormatPeriod }}>
+        <TimelineGridContext.Provider value={{ formatPeriod, delta, markers, gridMarkers, setFormatPeriod: handleFormatPeriod }}>
             {children}
         </TimelineGridContext.Provider>
     );

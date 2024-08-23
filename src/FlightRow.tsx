@@ -1,5 +1,5 @@
 import type React from "react";
-import { memo, useCallback, useEffect, useState } from "react";
+import { memo, useCallback, useEffect,  useState } from "react";
 import type { RowDefinition } from "dnd-timeline";
 import { useRow, useTimelineContext } from "dnd-timeline";
 import Sidebar from "./Sidebar";
@@ -24,6 +24,7 @@ const FlightRow = (props: FlightRowProps) => {
 		rowSidebarStyle,
 	} = useRow({ id });
 	const { pixelsToValue, range, sidebarWidth, } = useTimelineContext();
+	const { gridMarkers } = useTimelineGridContext();
 	const { formatPeriod } = useTimelineGridContext();
 	const [creatingItem, setCreatingItem] = useState<FlightItemDefinition>();
 	const isOverlapping = useCallback((startValue: number) => {
@@ -90,6 +91,30 @@ const FlightRow = (props: FlightRowProps) => {
 				<Sidebar flightId={id} flightGroupId={groupId} />
 			</div>
 			<div ref={setNodeRef} style={{ ...rowStyle, position: 'relative' }}>
+				{gridMarkers.map((sideDelta, index) => (
+					<div
+						key={`flight-${sideDelta}-${index}`}
+						style={{
+							position: "absolute",
+							bottom: 0,
+							display: "flex",
+							flexDirection: "row",
+							justifyContent: "flex-start",
+							alignItems: "flex-end",
+							height: "100%",
+							marginLeft: `${sideDelta}px`,
+						}}
+					>
+						<div
+							style={{
+								width: "1px",
+								height: `100%`,
+								backgroundColor: "red", // Vertical line color
+							}}
+						/>
+
+					</div>
+				))}
 				<div
 					onMouseLeave={handleMouseLeaveFlight}
 					onMouseEnter={(e) => handleMouseOverFlight(e, groupId, id)}
