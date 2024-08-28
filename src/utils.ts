@@ -1,8 +1,8 @@
 import { format, hoursToMilliseconds, startOfDay, startOfMonth, startOfWeek } from "date-fns";
 import type { Range, Span } from "dnd-timeline";
 import { nanoid } from "nanoid";
-import { MarkerDefinition } from "./TimeAxis";
-import { FlightItemDefinition } from "./FlightTimeline";
+import { MarkerDefinition } from "./components/TimeAxis";
+import { BookingItemDefinition } from "./components/BookingItem";
 
 export const generateGroups = (count: number, range: Range): Group[] => {
 	const groups = Array(count).fill(0).map(() => {
@@ -22,7 +22,12 @@ export const generateFlights = (count: number, groupId: string, range: Range) =>
 			return {
 				id,
 				groupId,
-				items: []
+				items: [] as {
+					id: string,
+					flightId: string,
+					span: Span,
+					groupId: string
+				}[]
 			};
 		});
 };
@@ -166,8 +171,8 @@ export interface Group {
 	flights: {
 		id: string;
 		groupId: string;
-		items: FlightItemDefinition[]
-	}[]
+		items: BookingItemDefinition[];
+	}[];
 }
 
 export function removeRandomItems<T>(array: T[], numberOfItemsToRemove: number) {

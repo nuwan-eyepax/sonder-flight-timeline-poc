@@ -1,29 +1,24 @@
 import React from "react";
-import { useTimelineContext, ItemDefinition } from "dnd-timeline";
+import { useTimelineContext } from "dnd-timeline";
 import Flight from "./FlightRow";
-import TimeAxis, { MarkerDefinition } from "./TimeAxis";
-import {
-	SortableContext,
-	verticalListSortingStrategy,
-} from "@dnd-kit/sortable";
-import FlightGroup from "./FlightGroup";
-import { Group } from "./utils";
+import TimeAxis from "./TimeAxis";
 import { useTimelineGridContext } from "./TimelineGridContext";
+import { BookingItemDefinition } from "./BookingItem";
+import { Group } from "../utils";
 
 
 export interface FlightTimelineProps {
-	groups: Group[],
+	group: Group,
 	isItemDragging: boolean;
 	isItemIsResizing: boolean;
-	onCreateFlightItem: (item: FlightItemDefinition) => void;
+	onCreateBookingItem: (item: BookingItemDefinition) => void;
 	moveTimeline: (deltaX: number) => void
 	handleViewChange: (view: string) => void
 }
 
-export type FlightItemDefinition = Omit<ItemDefinition, 'rowId'> & { groupId: string, flightId: string };
 
-function FlightTimeline(props: FlightTimelineProps) {
-	const { onCreateFlightItem, isItemDragging, isItemIsResizing,  handleViewChange, moveTimeline } = props;
+function FlightGroupTimeline(props: FlightTimelineProps) {
+	const { onCreateBookingItem, isItemDragging, isItemIsResizing, handleViewChange, moveTimeline, group } = props;
 	const { setTimelineRef, style } = useTimelineContext();
 	const { formatPeriod, setFormatPeriod } = useTimelineGridContext();
 	return (
@@ -45,30 +40,24 @@ function FlightTimeline(props: FlightTimelineProps) {
 				</div>
 			</div>
 
-			<TimeAxis/>
+			<TimeAxis />
 
 			<div ref={setTimelineRef} style={{ ...style }}>
-				{props.groups.map((group) => (
-					<FlightGroup id={group.id} key={group.id} flights={group.flights}>
-						<SortableContext items={group.flights.map(({ id }) => id)} strategy={verticalListSortingStrategy}>
-							{group.flights.map((flight) => (
-								<Flight
-									id={flight.id}
-									key={flight.id}
-									groupId={flight.groupId}
-									onCreateFlightItem={onCreateFlightItem}
-									items={flight.items}
-									isUpdating={isItemDragging || isItemIsResizing}
-								/>
-							))}
-						</SortableContext>
-
-					</FlightGroup>
+				{group.flights?.map((flight) => (
+					<Flight
+						id={flight.id}
+						key={flight.id}
+						groupId={flight.groupId}
+						onCreateBookingItem={onCreateBookingItem}
+						items={flight.items}
+						isUpdating={isItemDragging || isItemIsResizing}
+					/>
 				))}
+
 			</div>
 		</div>
 
 	);
 }
 
-export default FlightTimeline;
+export default FlightGroupTimeline;

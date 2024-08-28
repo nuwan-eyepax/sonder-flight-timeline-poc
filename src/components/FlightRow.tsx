@@ -2,20 +2,19 @@ import type React from "react";
 import { memo, useCallback, useEffect, useState } from "react";
 import type { RowDefinition } from "dnd-timeline";
 import { useRow, useTimelineContext } from "dnd-timeline";
-import Sidebar from "./Sidebar";
-import { FlightItemDefinition } from "./FlightTimeline";
+import FlightSidebar from "./FlightSidebar";
 import { nanoid } from "nanoid";
-import FlightItem from "./BookingItem";
+import BookingItem, { BookingItemDefinition } from "./BookingItem";
 import { useTimelineGridContext } from "./TimelineGridContext";
 interface FlightRowProps extends RowDefinition {
-	groupId: string;
-	onCreateFlightItem: (item: FlightItemDefinition) => void;
-	items: FlightItemDefinition[];
+	groupId?: string;
+	items: BookingItemDefinition[];
 	isUpdating: boolean
+	onCreateBookingItem: (item: BookingItemDefinition) => void;
 }
 
 const FlightRow = (props: FlightRowProps) => {
-	const { id, items, groupId, onCreateFlightItem, isUpdating } = props;
+	const { id, items, groupId, onCreateBookingItem, isUpdating } = props;
 	const {
 		setNodeRef,
 		setSidebarRef,
@@ -25,7 +24,7 @@ const FlightRow = (props: FlightRowProps) => {
 	} = useRow({ id });
 	const { pixelsToValue, range, sidebarWidth, } = useTimelineContext();
 	const { formatPeriod, gridPositions } = useTimelineGridContext();
-	const [creatingItem, setCreatingItem] = useState<FlightItemDefinition>();
+	const [creatingItem, setCreatingItem] = useState<BookingItemDefinition>();
 	const isOverlapping = useCallback((startValue: number) => {
 		return items.findIndex(({ span }) => span.start === startValue) > -1
 	}, [items])
@@ -37,7 +36,7 @@ const FlightRow = (props: FlightRowProps) => {
 		const startDate = pixelsToValue(clientX - sidebarWidth) + range.start;
 		const start = Math.floor(startDate / formatPeriod) * formatPeriod;
 		if (!isOverlapping(start)) {
-			const flightItem: FlightItemDefinition = {
+			const BookingItem: BookingItemDefinition = {
 				id: `item-${nanoid(3)}`,
 				span: {
 					start: start,
@@ -46,7 +45,7 @@ const FlightRow = (props: FlightRowProps) => {
 				groupId,
 				flightId,
 			}
-			setCreatingItem(flightItem);
+			setCreatingItem(BookingItem);
 		}
 	}, [formatPeriod, isOverlapping, pixelsToValue, range.start, sidebarWidth, isUpdating]);
 
@@ -55,8 +54,8 @@ const FlightRow = (props: FlightRowProps) => {
 	}, [creatingItem]);
 
 	const handleClick = useCallback(() => {
-		creatingItem && onCreateFlightItem(creatingItem);
-	}, [creatingItem, onCreateFlightItem]);
+		creatingItem && onCreateBookingItem(creatingItem);
+	}, [creatingItem, onCreateBookingItem]);
 	const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
 		if (creatingItem) {
 			const { clientX } = e;
@@ -87,7 +86,7 @@ const FlightRow = (props: FlightRowProps) => {
 	return (
 		<div style={{ ...rowWrapperStyle, minHeight: 20, background: "gray", border: "1px solid", marginBottom: "1px" }}>
 			<div ref={setSidebarRef} style={{ ...rowSidebarStyle }} >
-				<Sidebar flightId={id} flightGroupId={groupId} />
+				<FlightSidebar flightId={id} flightGroupId={groupId!} />
 			</div>
 			<div ref={setNodeRef} style={{ ...rowStyle, position: 'relative' }}>
 				{gridPositions.map((sideDelta, index) => (
@@ -116,28 +115,28 @@ const FlightRow = (props: FlightRowProps) => {
 				))}
 				<div
 					onMouseLeave={handleMouseLeaveFlight}
-					onMouseEnter={(e) => handleMouseOverFlight(e, groupId, id)}
+					onMouseEnter={(e) => handleMouseOverFlight(e, groupId!, id)}
 					onMouseMove={handleMouseMove}
 					onClick={handleClick}
 					style={{ width: '100%', height: "100%", position: 'relative' }}
 				>
 					{creatingItem && (
-						<FlightItem
+						<BookingItem
 							id={creatingItem.id}
 							span={creatingItem.span}
 							flightGroupId={creatingItem.groupId}
 							key={creatingItem.id}
 							isCreating
-							delta={formatPeriod}
+							formatPeriod={formatPeriod}
 							flightId={creatingItem.flightId} />
 					)}
 					{items.map((item) => (
-						<FlightItem
+						<BookingItem
 							id={item.id}
 							key={item.id}
 							span={item.span}
 							flightGroupId={groupId}
-							delta={formatPeriod}
+							formatPeriod={formatPeriod}
 							flightId={item.flightId}
 						/>
 					))}
