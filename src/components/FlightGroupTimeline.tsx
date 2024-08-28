@@ -5,6 +5,7 @@ import TimeAxis from "./TimeAxis";
 import { useTimelineGridContext } from "./TimelineGridContext";
 import { BookingItemDefinition } from "./BookingItem";
 import { Group } from "../utils";
+import FlightGroup from "./FlightGroup";
 
 
 export interface FlightTimelineProps {
@@ -41,20 +42,20 @@ function FlightGroupTimeline(props: FlightTimelineProps) {
 			</div>
 
 			<TimeAxis />
-
-			<div ref={setTimelineRef} style={{ ...style }}>
-				{group.flights?.map((flight) => (
-					<Flight
-						id={flight.id}
-						key={flight.id}
-						groupId={flight.groupId}
-						onCreateBookingItem={onCreateBookingItem}
-						items={flight.items}
-						isUpdating={isItemDragging || isItemIsResizing}
-					/>
-				))}
-
-			</div>
+			<FlightGroup id={group.id} key={group.id} flights={group.flights}>
+				<div ref={setTimelineRef} style={{ ...style }}>
+					{group.flights?.map((flight) => (
+						<Flight
+							id={flight.id}
+							key={flight.id}
+							groupId={flight.groupId}
+							onCreateBookingItem={onCreateBookingItem}
+							items={flight.items}
+							isUpdating={isItemDragging || isItemIsResizing}
+						/>
+					))}
+				</div>
+			</FlightGroup>
 		</div>
 
 	);

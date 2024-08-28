@@ -1,6 +1,6 @@
 import React from "react";
 import { useTimelineContext } from "dnd-timeline";
-import Flight from "./FlightRow";
+import FlightRow from "./FlightRow";
 import TimeAxis from "./TimeAxis";
 import { useTimelineGridContext } from "./TimelineGridContext";
 import { BookingItemDefinition } from "./BookingItem";
@@ -46,7 +46,7 @@ function FlightTimeline(props: FlightTimelineProps) {
 			<TimeAxis />
 
 			<div ref={setTimelineRef} style={{ ...style }}>
-				<Flight
+				<FlightRow
 					id={flight.id}
 					key={flight.id}
 					groupId={'group'}
