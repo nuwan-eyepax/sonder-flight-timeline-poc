@@ -1,13 +1,16 @@
 import { useTimelineContext } from "dnd-timeline";
 import { createContext, ReactNode, useContext, useMemo, useState } from "react";
 import { MarkerDefinition } from "./TimeAxis";
-import { Marker } from "./useMarkers";
-
+export interface Marker {
+    label?: string;
+    sideDelta: number;
+    heightMultiplier: number;
+}
 interface TimelineGridContextInterface {
     formatPeriod: number;
     delta: number;
     markers: Marker[];
-    gridMarkers: number[];
+    gridPositions: number[];
     setFormatPeriod: (value: number) => void;
 }
 const DAY_IN_MS = 1000 * 60 * 60 * 24; // 1 day in milliseconds
@@ -39,10 +42,9 @@ export const TimelineGridProvider: React.FC<{ children: ReactNode, markerDefinit
     }, [sortedMarkers])
     const markers = useMemo(() => {
         const rangeSize = range.end - range.start;
-        let startTime = Math.floor(range.start / delta) * delta;
+        const startTime = Math.floor(range.start / delta) * delta;
         const endTime = range.end;
         const markerSideDeltas: Marker[] = [];
-
         for (let time = startTime; time <= endTime; time += delta) {
             const multiplierIndex = sortedMarkers.findIndex((marker) => {
                 const alignsWithInterval = (time) % marker.value === 0;
@@ -61,24 +63,21 @@ export const TimelineGridProvider: React.FC<{ children: ReactNode, markerDefinit
                 sideDelta: valueToPixels(time - range.start + sidebarWidth),
             });
         }
-
         return markerSideDeltas;
     }, [range.end, range.start, delta, sortedMarkers, valueToPixels, sidebarWidth]);
-    const gridMarkers = useMemo(() => {
+    const gridPositions = useMemo(() => {
         const markerSideDeltas: number[] = [];
         for (const marker of markers) {
             const startTime = pixelsToValue(marker.sideDelta);
             const endTime = startTime + delta;
             for (let time = startTime; time <= endTime; time += formatPeriod) {
-                markerSideDeltas.push(valueToPixels(time)
-                );
+                markerSideDeltas.push(valueToPixels(time));
             }
         }
         return markerSideDeltas;
     }, [delta, formatPeriod, markers, pixelsToValue, valueToPixels]);
-    console.log(gridMarkers)
     return (
-        <TimelineGridContext.Provider value={{ formatPeriod, delta, markers, gridMarkers, setFormatPeriod: handleFormatPeriod }}>
+        <TimelineGridContext.Provider value={{ formatPeriod, delta, markers, gridPositions, setFormatPeriod: handleFormatPeriod }}>
             {children}
         </TimelineGridContext.Provider>
     );

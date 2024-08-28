@@ -1,5 +1,5 @@
 import type React from "react";
-import { memo, useCallback, useEffect,  useState } from "react";
+import { memo, useCallback, useEffect, useState } from "react";
 import type { RowDefinition } from "dnd-timeline";
 import { useRow, useTimelineContext } from "dnd-timeline";
 import Sidebar from "./Sidebar";
@@ -24,8 +24,7 @@ const FlightRow = (props: FlightRowProps) => {
 		rowSidebarStyle,
 	} = useRow({ id });
 	const { pixelsToValue, range, sidebarWidth, } = useTimelineContext();
-	const { gridMarkers } = useTimelineGridContext();
-	const { formatPeriod } = useTimelineGridContext();
+	const { formatPeriod, gridPositions } = useTimelineGridContext();
 	const [creatingItem, setCreatingItem] = useState<FlightItemDefinition>();
 	const isOverlapping = useCallback((startValue: number) => {
 		return items.findIndex(({ span }) => span.start === startValue) > -1
@@ -91,7 +90,7 @@ const FlightRow = (props: FlightRowProps) => {
 				<Sidebar flightId={id} flightGroupId={groupId} />
 			</div>
 			<div ref={setNodeRef} style={{ ...rowStyle, position: 'relative' }}>
-				{gridMarkers.map((sideDelta, index) => (
+				{gridPositions.map((sideDelta, index) => (
 					<div
 						key={`flight-${sideDelta}-${index}`}
 						style={{
