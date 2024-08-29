@@ -2,18 +2,19 @@ import type React from "react";
 import { memo, useCallback, useEffect, useState } from "react";
 import type { RowDefinition } from "dnd-timeline";
 import { useRow, useTimelineContext } from "dnd-timeline";
-import FlightSidebar from "./FlightSidebar";
+import TimelineRowSidebar from "./TimelineRowSidebar";
 import { nanoid } from "nanoid";
-import BookingItem, { BookingItemDefinition } from "./BookingItem";
+import TimelineItem, { TimelineItemDefinition } from "./TimelineItem";
 import { useTimelineGridContext } from "./TimelineGridContext";
+
 interface FlightRowProps extends RowDefinition {
 	groupId?: string;
-	items: BookingItemDefinition[];
+	items: TimelineItemDefinition[];
 	isUpdating: boolean
-	onCreateBookingItem: (item: BookingItemDefinition) => void;
+	onCreateBookingItem: (item: TimelineItemDefinition) => void;
 }
 
-const FlightRow = (props: FlightRowProps) => {
+const TimelineRow = (props: FlightRowProps) => {
 	const { id, items, groupId, onCreateBookingItem, isUpdating } = props;
 	const {
 		setNodeRef,
@@ -24,11 +25,11 @@ const FlightRow = (props: FlightRowProps) => {
 	} = useRow({ id });
 	const { pixelsToValue, range, sidebarWidth, } = useTimelineContext();
 	const { formatPeriod, gridPositions } = useTimelineGridContext();
-	const [creatingItem, setCreatingItem] = useState<BookingItemDefinition>();
+	const [creatingItem, setCreatingItem] = useState<TimelineItemDefinition>();
 	const isOverlapping = useCallback((startValue: number) => {
 		return items.findIndex(({ span }) => span.start === startValue) > -1
 	}, [items])
-	const handleMouseOverFlight = useCallback((e: React.MouseEvent<HTMLDivElement>, groupId: string, flightId: string) => {
+	const handleMouseOverFlight = useCallback((e: React.MouseEvent<HTMLDivElement>, groupId: string, rowId: string) => {
 		if (isUpdating) {
 			return
 		}
@@ -36,14 +37,14 @@ const FlightRow = (props: FlightRowProps) => {
 		const startDate = pixelsToValue(clientX - sidebarWidth) + range.start;
 		const start = Math.floor(startDate / formatPeriod) * formatPeriod;
 		if (!isOverlapping(start)) {
-			const BookingItem: BookingItemDefinition = {
+			const BookingItem: TimelineItemDefinition = {
 				id: `item-${nanoid(3)}`,
 				span: {
 					start: start,
 					end: start + formatPeriod
 				},
 				groupId,
-				flightId,
+				rowId,
 			}
 			setCreatingItem(BookingItem);
 		}
@@ -84,11 +85,11 @@ const FlightRow = (props: FlightRowProps) => {
 		setCreatingItem(undefined);
 	}, [isUpdating]);
 	return (
-		<div style={{ ...rowWrapperStyle, minHeight: 20, background: "gray", border: "1px solid", marginBottom: "1px" }}>
+		<div style={{ ...rowWrapperStyle, minHeight: 30, background: "gray", border: "1px solid", marginBottom: "1px" }}>
 			<div ref={setSidebarRef} style={{ ...rowSidebarStyle }} >
-				<FlightSidebar flightId={id} flightGroupId={groupId!} />
+				<TimelineRowSidebar rowId={id} groupId={groupId!} />
 			</div>
-			<div ref={setNodeRef} style={{ ...rowStyle, position: 'relative' }}>
+			<div ref={setNodeRef} style={{ ...rowStyle, position: 'relative', height: 20 }}>
 				{gridPositions.map((sideDelta, index) => (
 					<div
 						key={`flight-${sideDelta}-${index}`}
@@ -121,23 +122,23 @@ const FlightRow = (props: FlightRowProps) => {
 					style={{ width: '100%', height: "100%", position: 'relative' }}
 				>
 					{creatingItem && (
-						<BookingItem
+						<TimelineItem
 							id={creatingItem.id}
 							span={creatingItem.span}
-							flightGroupId={creatingItem.groupId}
+							groupId={creatingItem.groupId}
 							key={creatingItem.id}
 							isCreating
 							formatPeriod={formatPeriod}
-							flightId={creatingItem.flightId} />
+							rowId={creatingItem.rowId} />
 					)}
 					{items.map((item) => (
-						<BookingItem
+						<TimelineItem
 							id={item.id}
 							key={item.id}
 							span={item.span}
-							flightGroupId={groupId}
+							groupId={groupId}
 							formatPeriod={formatPeriod}
-							flightId={item.flightId}
+							rowId={item.rowId}
 						/>
 					))}
 				</div>
@@ -147,4 +148,4 @@ const FlightRow = (props: FlightRowProps) => {
 	);
 }
 
-export default memo(FlightRow);
+export default memo(TimelineRow);

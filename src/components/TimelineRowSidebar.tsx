@@ -1,19 +1,19 @@
 import { useSortable } from "@dnd-kit/sortable";
 
-export interface FlightSidebarProps {
-	flightId: string;
-	flightGroupId: string;
+export interface TimelineRowSidebarProps {
+	rowId: string;
+	groupId: string;
 	showHandler?: boolean;
 }
 
-const FlightSidebar = (props: FlightSidebarProps) => {
-	const { flightGroupId, flightId } = props
+const TimelineRowSidebar = (props: TimelineRowSidebarProps) => {
+	const { groupId, rowId } = props
 	const { attributes, listeners, setNodeRef, transform, transition } =
 		useSortable({
-			id: flightId,
+			id: rowId,
 			data: {
 				type: 'FLIGHT_SIDE_BAR',
-				flightGroupId
+				groupId
 			}
 		});
 	const style = {
@@ -28,9 +28,9 @@ const FlightSidebar = (props: FlightSidebarProps) => {
 
 	return (
 		<div ref={setNodeRef} style={style} {...attributes} {...listeners}>
-			{`Flight ${flightId}`}
+			{`Flight ${rowId}`}
 		</div>
 	);
 }
 
-export default FlightSidebar;
+export default TimelineRowSidebar;

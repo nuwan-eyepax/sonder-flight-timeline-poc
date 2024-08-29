@@ -1,6 +1,6 @@
 import { useTimelineContext } from "dnd-timeline";
 import { createContext, ReactNode, useContext, useMemo, useState } from "react";
-import { MarkerDefinition } from "./TimeAxis";
+import { MarkerDefinition } from "./TimeScaleAxis";
 export interface Marker {
     label?: string;
     sideDelta: number;

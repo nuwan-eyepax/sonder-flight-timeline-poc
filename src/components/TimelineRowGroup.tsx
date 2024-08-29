@@ -1,19 +1,19 @@
 import React, { memo, useEffect, useState } from "react";
-import { useTimelineGridContext } from "./TimelineGridContext";
 import { Span, useTimelineContext } from "dnd-timeline";
-import BookingItem, { BookingItemDefinition } from "./BookingItem";
+import { useTimelineGridContext } from "./TimelineGridContext";
+import TimelineItem, { TimelineItemDefinition } from "./TimelineItem";
 
-type GroupItemDefinition = Omit<BookingItemDefinition, 'flightId'>;
+type GroupItemDefinition = Omit<TimelineItemDefinition, 'rowId'>;
 export interface FlightGroupRowProps {
 	children: React.ReactNode;
 	id: string;
-	flights: {
+	rows: {
 		id: string;
 		groupId: string;
-		items: BookingItemDefinition[]
+		items: TimelineItemDefinition[]
 	}[]
 }
-const FlightGroupRow = (props: FlightGroupRowProps) => {
+const TimelineRowGroup = (props: FlightGroupRowProps) => {
 	const [groupItem, setGroupItem] = useState<GroupItemDefinition>();
 	const [isCollapsed, setIsCollapsed] = useState(false);
 	const { formatPeriod } = useTimelineGridContext();
@@ -26,11 +26,11 @@ const FlightGroupRow = (props: FlightGroupRowProps) => {
 			start: 0,
 			end: 0
 		};
-		for (let i = 0; i < props.flights.length; i++) {
-			let flight = props.flights[i];
+		for (let i = 0; i < props.rows.length; i++) {
+			let row = props.rows[i];
 
-			for (let j = 0; j < flight.items.length; j++) {
-				let item = flight.items[j];
+			for (let j = 0; j < row.items.length; j++) {
+				let item = row.items[j];
 				let { start, end } = item.span;
 				if (aggregatedSpan.start === 0 || start < aggregatedSpan.start) {
 					aggregatedSpan.start = start;
@@ -47,9 +47,9 @@ const FlightGroupRow = (props: FlightGroupRowProps) => {
 				end: aggregatedSpan.end + pixelsToValue(sidebarWidth)
 
 			},
-			id: `flight-group-${props.id}`
+			id: `row-group-${props.id}`,
 		})
-	}, [pixelsToValue, props.flights, props.id, range, sidebarWidth]);
+	}, [pixelsToValue, props.rows, props.id, range, sidebarWidth]);
 
 	return (<div style={{ display: 'flex', flexDirection: "column" }}>
 		<div style={{
@@ -71,10 +71,10 @@ const FlightGroupRow = (props: FlightGroupRowProps) => {
 				onClick={handleCollapse}>
 				Flight Group :{props.id}
 			</div>
-			{groupItem && <BookingItem
+			{groupItem && <TimelineItem
 				id={groupItem.id}
 				span={groupItem.span}
-				flightGroupId={groupItem.groupId}
+				groupId={groupItem.groupId}
 				formatPeriod={formatPeriod}
 				disabled
 			/>}
@@ -83,4 +83,4 @@ const FlightGroupRow = (props: FlightGroupRowProps) => {
 		{isCollapsed ? null : props.children}
 	</div >)
 }
-export default memo(FlightGroupRow)
+export default memo(TimelineRowGroup)

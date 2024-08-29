@@ -3,27 +3,27 @@ import React, { memo, useMemo } from "react";
 import { useItem } from "dnd-timeline";
 import type { ItemDefinition, Span } from "dnd-timeline";
 
-export interface BookingItemProps {
+export interface TimelineItemProps {
 	id: string; // booking item id, unique id in dnd-timeline context.
 	span: Span; // dnd-timeline span object which contains start and end time in epoch.
 	formatPeriod: number; // difference between to two spanning positions of the timeline in milliseconds.
 	isCreating?: boolean; //if the booking is on creating.
-	flightId?: string; // flight id, unique id in dnd-timeline context.
-	flightGroupId?: string; // flight group id, unique id in dnd-timeline context.
+	rowId?: string; // row id, unique id in dnd-timeline context.
+	groupId?: string; // group id, unique id in dnd-timeline context.
 	disabled?: boolean;
 }
-export type BookingItemDefinition = Omit<ItemDefinition, 'rowId'> & { groupId: string, flightId: string };
+export type TimelineItemDefinition = ItemDefinition & { groupId: string };
 
-const BookingItem = (props: BookingItemProps) => {
-	const { flightGroupId, flightId, isCreating, formatPeriod, disabled } = props
+const TimelineItem = (props: TimelineItemProps) => {
+	const { groupId, rowId, isCreating, formatPeriod, disabled } = props
 	const { setNodeRef, attributes, listeners, itemStyle, itemContentStyle, } =
 		useItem({
 			id: props.id,
 			span: props.span,
 			data: {
 				type: 'BOOKING_ITEM',
-				flightGroupId,
-				flightId,
+				groupId,
+				rowId,
 				formatPeriod
 			},
 			disabled: disabled || isCreating
@@ -66,4 +66,4 @@ const BookingItem = (props: BookingItemProps) => {
 	);
 }
 
- export default memo(BookingItem);
+export default memo(TimelineItem);

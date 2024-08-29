@@ -8,7 +8,7 @@ import { arrayMove } from "@dnd-kit/sortable";
 import { Modifier } from "@dnd-kit/core";
 import { restrictToHorizontalAxis } from "@dnd-kit/modifiers";
 import { TimelineGridProvider } from "../components/TimelineGridContext";
-import { BookingItemDefinition } from "../components/BookingItem";
+import { TimelineItemDefinition } from "../components/TimelineItem";
 
 const restrictFlightControl: Modifier = ({ active, ...rest }) => {
 	const activeItemType = active?.data.current?.type as string;
@@ -56,10 +56,10 @@ function CampaignTimelinePage() {
 			setGroups((prev) => {
 				const groups = [...prev]
 				const groupIndex = groups.findIndex((group) => group.id === groupId);
-				groups[groupIndex].flights = groups[groupIndex].flights.map((flight) => {
+				groups[groupIndex].rows = groups[groupIndex].rows.map((row) => {
 					return {
-						...flight,
-						items: flight.items.map((item) => {
+						...row,
+						items: row.items.map((item) => {
 							if (item.id !== activeItemId) return item;
 							return {
 								...item,
@@ -94,11 +94,11 @@ function CampaignTimelinePage() {
 			setGroups((prev) => {
 				const groups = [...prev]
 				const groupIndex = groups.findIndex((group) => group.id === groupId);
-				groups[groupIndex].flights = groups[groupIndex].flights.map((flight) => {
-					const currentFlightSpans = flight.items.filter(({ id }) => activeId !== id).map(({ span }) => span);
+				groups[groupIndex].rows = groups[groupIndex].rows.map((row) => {
+					const currentFlightSpans = row.items.filter(({ id }) => activeId !== id).map(({ span }) => span);
 					return {
-						...flight,
-						items: flight.items.map((item) => {
+						...row,
+						items: row.items.map((item) => {
 							if (item.id !== activeId)
 								return item;
 							if (item.id === activeId && isOverlapping(updatedSpan, currentFlightSpans))
@@ -119,9 +119,9 @@ function CampaignTimelinePage() {
 			setGroups((prev) => {
 				const groups = [...prev]
 				const groupIndex = groups.findIndex((group) => group.id === groupId);
-				const oldIndex = groups[groupIndex].flights.findIndex((flight) => flight.id === activeId);
-				const newIndex = groups[groupIndex].flights.findIndex((flight) => flight.id === overedId);
-				groups[groupIndex].flights = arrayMove(groups[groupIndex].flights, oldIndex, newIndex);
+				const oldIndex = groups[groupIndex].rows.findIndex((row) => row.id === activeId);
+				const newIndex = groups[groupIndex].rows.findIndex((row) => row.id === overedId);
+				groups[groupIndex].rows = arrayMove(groups[groupIndex].rows, oldIndex, newIndex);
 				return groups
 			});
 		}
@@ -152,24 +152,24 @@ function CampaignTimelinePage() {
 		}
 	}, [range]);
 
-	const onCreateBookingItem = useCallback(({ id, flightId, groupId, span }: BookingItemDefinition) => {
+	const onCreateBookingItem = useCallback(({ id, rowId, groupId, span }: TimelineItemDefinition) => {
 		setGroups((prev) => {
 			const groups = [...prev]
 			const groupIndex = groups.findIndex((group) => group.id === groupId);
-			const flightIndex = groups[groupIndex].flights.findIndex((flight) => flight.id === flightId);
-			const itemIndex = groups[groupIndex].flights[flightIndex].items.findIndex((item) => item.id === id);
+			const flightIndex = groups[groupIndex].rows.findIndex((row) => row.id === rowId);
+			const itemIndex = groups[groupIndex].rows[flightIndex].items.findIndex((item) => item.id === id);
 			const newItem = {
-				flightId: flightId,
+				rowId: rowId,
 				id: id,
 				span: span,
 				isCreating: false,
 				groupId
 			}
 			if (itemIndex === -1) {
-				groups[groupIndex].flights[flightIndex].items.push(newItem)
+				groups[groupIndex].rows[flightIndex].items.push(newItem)
 
 			} else {
-				groups[groupIndex].flights[flightIndex].items[itemIndex] = newItem;
+				groups[groupIndex].rows[flightIndex].items[itemIndex] = newItem;
 			}
 			return groups
 		});

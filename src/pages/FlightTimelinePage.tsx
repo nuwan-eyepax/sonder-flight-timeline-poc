@@ -3,11 +3,11 @@ import { endOfDay, endOfMonth, startOfDay, startOfMonth } from "date-fns";
 import type { DragEndEvent, Range, ResizeEndEvent } from "dnd-timeline";
 import { TimelineContext } from "dnd-timeline";
 import Timeline from "../components/FlightTimeline";
-import { generateFlights, isOverlapping, timeAxisMarkers } from "../utils";
+import { generateRows, isOverlapping, timeAxisMarkers } from "../utils";
 import { Modifier } from "@dnd-kit/core";
 import { restrictToHorizontalAxis } from "@dnd-kit/modifiers";
 import { TimelineGridProvider } from "../components/TimelineGridContext";
-import { BookingItemDefinition } from "../components/BookingItem";
+import { TimelineItemDefinition } from "../components/TimelineItem";
 
 const restrictFlightControl: Modifier = ({ active, ...rest }) => {
     const activeItemType = active?.data.current?.type as string;
@@ -22,10 +22,12 @@ const DEFAULT_RANGE: Range = {
     start: startOfMonth(now).getTime(),
     end: endOfMonth(now).getTime(),
 };
-const initFlights = generateFlights(1, '', DEFAULT_RANGE);
+const rows = generateRows(1, '', DEFAULT_RANGE);
+
+
 function FlightTimelinePage() {
     const [range, setRange] = useState(DEFAULT_RANGE);
-    const [flight, setFlight] = useState(initFlights[0]);
+    const [row, setRow] = useState(rows[0]);
     const [isItemResizing, setIsItemResizing] = useState(false);
     const [isItemDragging, setIsItemDragging] = useState(false);
     const [view, setView] = useState('week');
@@ -51,10 +53,10 @@ function FlightTimelinePage() {
         const activeItemId = event.active.id;
         const activeItemType = event.active.data.current.type as string;
         if (updatedSpan && activeItemType === 'BOOKING_ITEM') {
-            setFlight((flight) => {
+            setRow((row) => {
                 return {
-                    ...flight,
-                    items: flight.items.map((item) => {
+                    ...row,
+                    items: row.items.map((item) => {
                         if (item.id !== activeItemId) return item;
                         return {
                             ...item,
@@ -82,11 +84,11 @@ function FlightTimelinePage() {
                 start: Math.round(updatedSpan.start / formatPeriod) * formatPeriod,
                 end: Math.round(updatedSpan.end / formatPeriod) * formatPeriod
             }
-            setFlight((flight) => {
-                const currentFlightSpans = flight.items.filter(({ id }) => activeId !== id).map(({ span }) => span);
+            setRow((row) => {
+                const currentFlightSpans = row.items.filter(({ id }) => activeId !== id).map(({ span }) => span);
                 return {
-                    ...flight,
-                    items: flight.items.map((item) => {
+                    ...row,
+                    items: row.items.map((item) => {
                         if (item.id !== activeId)
                             return item;
                         if (item.id === activeId && isOverlapping(updatedSpan, currentFlightSpans))
@@ -128,23 +130,23 @@ function FlightTimelinePage() {
         }
     }, [range]);
 
-    const onCreateBookingItem = useCallback(({ id, flightId, groupId, span }: BookingItemDefinition) => {
-        setFlight((flight) => {
-            const itemIndex = flight.items.findIndex((item) => item.id === id);
+    const onCreateBookingItem = useCallback(({ id, rowId, groupId, span }: TimelineItemDefinition) => {
+        setRow((row) => {
+            const itemIndex = row.items.findIndex((item) => item.id === id);
             const newItem = {
-                flightId: flightId,
+                rowId: rowId,
                 id: id,
                 span: span,
                 isCreating: false,
                 groupId
             }
             if (itemIndex === -1) {
-                flight.items.push(newItem)
+                row.items.push(newItem)
 
             } else {
-                flight.items[itemIndex] = newItem;
+                row.items[itemIndex] = newItem;
             }
-            return flight
+            return row
         });
     }, []);
 
@@ -176,7 +178,7 @@ function FlightTimelinePage() {
         >
             <TimelineGridProvider markerDefinitions={timeAxisMarkers[view]}>
                 <Timeline
-                    flight={flight}
+                    row={row}
                     isItemDragging={isItemDragging}
                     isItemIsResizing={isItemResizing}
                     onCreateBookingItem={onCreateBookingItem}

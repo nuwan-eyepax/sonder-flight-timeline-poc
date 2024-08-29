@@ -1,27 +1,27 @@
 import React from "react";
 import { useTimelineContext } from "dnd-timeline";
-import FlightRow from "./FlightRow";
-import TimeAxis from "./TimeAxis";
+import FlightRow from "./TimelineRow";
+import TimeAxis from "./TimeScaleAxis";
 import { useTimelineGridContext } from "./TimelineGridContext";
-import { BookingItemDefinition } from "./BookingItem";
+import { TimelineItemDefinition } from "./TimelineItem";
 
 
 export interface FlightTimelineProps {
-	flight: {
+	row: {
 		id: string;
 		groupId: string;
-		items: BookingItemDefinition[];
+		items: TimelineItemDefinition[];
 	},
 	isItemDragging: boolean;
 	isItemIsResizing: boolean;
-	onCreateBookingItem: (item: BookingItemDefinition) => void;
+	onCreateBookingItem: (item: TimelineItemDefinition) => void;
 	moveTimeline: (deltaX: number) => void
 	handleViewChange: (view: string) => void
 }
 
 
 function FlightTimeline(props: FlightTimelineProps) {
-	const { onCreateBookingItem, isItemDragging, isItemIsResizing, handleViewChange, moveTimeline, flight } = props;
+	const { onCreateBookingItem, isItemDragging, isItemIsResizing, handleViewChange, moveTimeline, row } = props;
 	const { setTimelineRef, style } = useTimelineContext();
 	const { formatPeriod, setFormatPeriod } = useTimelineGridContext();
 	return (
@@ -47,11 +47,11 @@ function FlightTimeline(props: FlightTimelineProps) {
 
 			<div ref={setTimelineRef} style={{ ...style }}>
 				<FlightRow
-					id={flight.id}
-					key={flight.id}
+					id={row.id}
+					key={row.id}
 					groupId={'group'}
 					onCreateBookingItem={onCreateBookingItem}
-					items={flight.items}
+					items={row.items}
 					isUpdating={isItemDragging || isItemIsResizing}
 				/>
 			</div>

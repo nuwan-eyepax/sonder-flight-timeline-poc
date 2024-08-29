@@ -8,7 +8,7 @@ import { arrayMove } from "@dnd-kit/sortable";
 import { Modifier } from "@dnd-kit/core";
 import { restrictToHorizontalAxis } from "@dnd-kit/modifiers";
 import { TimelineGridProvider } from "../components/TimelineGridContext";
-import { BookingItemDefinition } from "../components/BookingItem";
+import { TimelineItemDefinition } from "../components/TimelineItem";
 
 const restrictFlightControl: Modifier = ({ active, ...rest }) => {
     const activeItemType = active?.data.current?.type as string;
@@ -53,10 +53,10 @@ function FlightGroupTimelinePage() {
         const activeItemType = event.active.data.current.type as string;
         if (updatedSpan && activeItemType === 'BOOKING_ITEM') {
             setGroup((group) => {
-                group.flights = group.flights.map((flight) => {
+                group.rows = group.rows.map((row) => {
                     return {
-                        ...flight,
-                        items: flight.items.map((item) => {
+                        ...row,
+                        items: row.items.map((item) => {
                             if (item.id !== activeItemId) return item;
                             return {
                                 ...item,
@@ -88,11 +88,11 @@ function FlightGroupTimelinePage() {
                 end: Math.round(updatedSpan.end / formatPeriod) * formatPeriod
             }
             setGroup((group) => {
-                group.flights = group.flights.map((flight) => {
-                    const currentFlightSpans = flight.items.filter(({ id }) => activeId !== id).map(({ span }) => span);
+                group.rows = group.rows.map((row) => {
+                    const currentFlightSpans = row.items.filter(({ id }) => activeId !== id).map(({ span }) => span);
                     return {
-                        ...flight,
-                        items: flight.items.map((item) => {
+                        ...row,
+                        items: row.items.map((item) => {
                             if (item.id !== activeId)
                                 return item;
                             if (item.id === activeId && isOverlapping(updatedSpan, currentFlightSpans))
@@ -111,9 +111,9 @@ function FlightGroupTimelinePage() {
         }
         if (activeItemType === 'FLIGHT_SIDE_BAR') {
             setGroup((group) => {
-                const oldIndex = group.flights.findIndex((flight) => flight.id === activeId);
-                const newIndex = group.flights.findIndex((flight) => flight.id === overedId);
-                group.flights = arrayMove(group.flights, oldIndex, newIndex);
+                const oldIndex = group.rows.findIndex((row) => row.id === activeId);
+                const newIndex = group.rows.findIndex((row) => row.id === overedId);
+                group.rows = arrayMove(group.rows, oldIndex, newIndex);
                 return group
             });
         }
@@ -144,22 +144,22 @@ function FlightGroupTimelinePage() {
         }
     }, [range]);
 
-    const onCreateBookingItem = useCallback(({ id, flightId, groupId, span }: BookingItemDefinition) => {
+    const onCreateBookingItem = useCallback(({ id, rowId, groupId, span }: TimelineItemDefinition) => {
         setGroup((group) => {
-            const flightIndex = group.flights.findIndex((flight) => flight.id === flightId);
-            const itemIndex = group.flights[flightIndex].items.findIndex((item) => item.id === id);
+            const rowIndex = group.rows.findIndex((row) => row.id === rowId);
+            const itemIndex = group.rows[rowIndex].items.findIndex((item) => item.id === id);
             const newItem = {
-                flightId: flightId,
+                rowId: rowId,
                 id: id,
                 span: span,
                 isCreating: false,
                 groupId
             }
             if (itemIndex === -1) {
-                group.flights[flightIndex].items.push(newItem)
+                group.rows[rowIndex].items.push(newItem)
 
             } else {
-                group.flights[flightIndex].items[itemIndex] = newItem;
+                group.rows[rowIndex].items[itemIndex] = newItem;
             }
             return group
         });

@@ -8,7 +8,7 @@ export interface MarkerDefinition {
 	getLabel?: (time: Date) => string;
 }
 
-function TimeAxis() {
+function TimeScaleAxis() {
 	const { direction, sidebarWidth } =
 		useTimelineContext();
 	const side = direction === "rtl" ? "right" : "left";
@@ -62,4 +62,4 @@ function TimeAxis() {
 	);
 }
 
-export default memo(TimeAxis);
+export default memo(TimeScaleAxis);

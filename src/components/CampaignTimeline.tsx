@@ -1,22 +1,21 @@
 import React from "react";
-import { useTimelineContext } from "dnd-timeline";
-import Flight from "./FlightRow";
-import TimeAxis from "./TimeAxis";
 import {
 	SortableContext,
 	verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import FlightGroup from "./FlightGroup";
-import { Group } from "../utils";
+import { useTimelineContext } from "dnd-timeline";
 import { useTimelineGridContext } from "./TimelineGridContext";
-import { BookingItemDefinition } from "./BookingItem";
-
+import { TimelineItemDefinition } from "./TimelineItem";
+import { Group } from "../utils";
+import TimelineRow from "./TimelineRow";
+import TimeScaleAxis from "./TimeScaleAxis";
+import TimelineRowGroup from "./TimelineRowGroup";
 
 export interface FlightTimelineProps {
 	groups: Group[],
 	isItemDragging: boolean;
 	isItemIsResizing: boolean;
-	onCreateBookingItem: (item: BookingItemDefinition) => void;
+	onCreateBookingItem: (item: TimelineItemDefinition) => void;
 	moveTimeline: (deltaX: number) => void
 	handleViewChange: (view: string) => void
 }
@@ -45,25 +44,24 @@ function CampaignTimeline(props: FlightTimelineProps) {
 				</div>
 			</div>
 
-			<TimeAxis />
+			<TimeScaleAxis />
 
 			<div ref={setTimelineRef} style={{ ...style }}>
 				{props.groups.map((group) => (
-					<FlightGroup id={group.id} key={group.id} flights={group.flights}>
-						<SortableContext items={group.flights.map(({ id }) => id)} strategy={verticalListSortingStrategy}>
-							{group.flights.map((flight) => (
-								<Flight
-									id={flight.id}
-									key={flight.id}
-									groupId={flight.groupId}
+					<TimelineRowGroup id={group.id} key={group.id} rows={group.rows}>
+						<SortableContext items={group.rows.map(({ id }) => id)} strategy={verticalListSortingStrategy}>
+							{group.rows.map((row) => (
+								<TimelineRow
+									id={row.id}
+									key={row.id}
+									groupId={row.groupId}
 									onCreateBookingItem={onCreateBookingItem}
-									items={flight.items}
+									items={row.items}
 									isUpdating={isItemDragging || isItemIsResizing}
 								/>
 							))}
 						</SortableContext>
-
-					</FlightGroup>
+					</TimelineRowGroup>
 				))}
 			</div>
 		</div>

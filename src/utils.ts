@@ -1,20 +1,20 @@
 import { format, hoursToMilliseconds, startOfDay, startOfMonth, startOfWeek } from "date-fns";
 import type { Range, Span } from "dnd-timeline";
 import { nanoid } from "nanoid";
-import { MarkerDefinition } from "./components/TimeAxis";
-import { BookingItemDefinition } from "./components/BookingItem";
+import { MarkerDefinition } from "./components/TimeScaleAxis";
+import { TimelineItemDefinition } from "./components/TimelineItem";
 
 export const generateGroups = (count: number, range: Range): Group[] => {
 	const groups = Array(count).fill(0).map(() => {
 		let id = `group-${nanoid(5)}`;
 		return {
 			id,
-			flights: generateFlights(5, id, range)
+			rows: generateRows(5, id, range)
 		};
 	})
 	return groups;
 }
-export const generateFlights = (count: number, groupId: string, range: Range) => {
+export const generateRows = (count: number, groupId: string, range: Range) => {
 	return Array(count)
 		.fill(0)
 		.map(() => {
@@ -24,7 +24,7 @@ export const generateFlights = (count: number, groupId: string, range: Range) =>
 				groupId,
 				items: [] as {
 					id: string,
-					flightId: string,
+					rowId: string,
 					span: Span,
 					groupId: string
 				}[]
@@ -168,10 +168,10 @@ export const timeAxisMarkers: { [key: string]: MarkerDefinition[] } = {
 
 export interface Group {
 	id: string;
-	flights: {
+	rows: {
 		id: string;
 		groupId: string;
-		items: BookingItemDefinition[];
+		items: TimelineItemDefinition[];
 	}[];
 }
 
