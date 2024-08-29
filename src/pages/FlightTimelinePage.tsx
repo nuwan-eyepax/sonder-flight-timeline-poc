@@ -12,7 +12,7 @@ import { TimelineItemDefinition } from "../components/TimelineItem";
 const restrictFlightControl: Modifier = ({ active, ...rest }) => {
     const activeItemType = active?.data.current?.type as string;
 
-    if (activeItemType === 'BOOKING_ITEM') {
+    if (activeItemType === 'TIMELINE_ITEM') {
         return restrictToHorizontalAxis({ ...rest, active })
     }
     return rest.transform
@@ -22,7 +22,7 @@ const DEFAULT_RANGE: Range = {
     start: startOfMonth(now).getTime(),
     end: endOfMonth(now).getTime(),
 };
-const rows = generateRows(1, '', DEFAULT_RANGE);
+const rows = generateRows(1, '');
 
 
 function FlightTimelinePage() {
@@ -45,14 +45,14 @@ function FlightTimelinePage() {
             event.active.data.current.getSpanFromResizeEvent?.(event);
         if (!updatedSpan)
             return;
-        const formatPeriod = event.active.data.current.formatPeriod as number;
+        const timelineGridDelta = event.active.data.current.timelineGridDelta as number;
         const modifiedSpan = {
-            start: Math.floor(updatedSpan?.start / formatPeriod) * formatPeriod,
-            end: Math.ceil(updatedSpan?.end / formatPeriod) * formatPeriod
+            start: Math.floor(updatedSpan?.start / timelineGridDelta) * timelineGridDelta,
+            end: Math.ceil(updatedSpan?.end / timelineGridDelta) * timelineGridDelta
         }
         const activeItemId = event.active.id;
         const activeItemType = event.active.data.current.type as string;
-        if (updatedSpan && activeItemType === 'BOOKING_ITEM') {
+        if (updatedSpan && activeItemType === 'TIMELINE_ITEM') {
             setRow((row) => {
                 return {
                     ...row,
@@ -74,15 +74,15 @@ function FlightTimelinePage() {
         if (!overedId) return;
         const activeId = event.active.id;
         const activeItemType = event.active.data.current.type as string;
-        if (activeItemType === 'BOOKING_ITEM') {
-            const formatPeriod = event.active.data.current.formatPeriod as number;
+        if (activeItemType === 'TIMELINE_ITEM') {
+            const timelineGridDelta = event.active.data.current.timelineGridDelta as number;
             const updatedSpan = event.active.data.current.getSpanFromDragEvent?.(event);
             if (!updatedSpan) {
                 return;
             }
             const modifiedSpan = {
-                start: Math.round(updatedSpan.start / formatPeriod) * formatPeriod,
-                end: Math.round(updatedSpan.end / formatPeriod) * formatPeriod
+                start: Math.round(updatedSpan.start / timelineGridDelta) * timelineGridDelta,
+                end: Math.round(updatedSpan.end / timelineGridDelta) * timelineGridDelta
             }
             setRow((row) => {
                 const currentFlightSpans = row.items.filter(({ id }) => activeId !== id).map(({ span }) => span);
@@ -130,7 +130,7 @@ function FlightTimelinePage() {
         }
     }, [range]);
 
-    const onCreateBookingItem = useCallback(({ id, rowId, groupId, span }: TimelineItemDefinition) => {
+    const onCreateTimelineItem = useCallback(({ id, rowId, groupId, span }: TimelineItemDefinition) => {
         setRow((row) => {
             const itemIndex = row.items.findIndex((item) => item.id === id);
             const newItem = {
@@ -181,7 +181,7 @@ function FlightTimelinePage() {
                     row={row}
                     isItemDragging={isItemDragging}
                     isItemIsResizing={isItemResizing}
-                    onCreateBookingItem={onCreateBookingItem}
+                    onCreateTimelineItem={onCreateTimelineItem}
                     handleViewChange={handleViewChange}
                     moveTimeline={moveTimeline}
                 />

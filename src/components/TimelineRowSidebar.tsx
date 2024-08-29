@@ -12,7 +12,7 @@ const TimelineRowSidebar = (props: TimelineRowSidebarProps) => {
 		useSortable({
 			id: rowId,
 			data: {
-				type: 'FLIGHT_SIDE_BAR',
+				type: 'TIMELINE_ROW_SIDEBAR',
 				groupId
 			}
 		});

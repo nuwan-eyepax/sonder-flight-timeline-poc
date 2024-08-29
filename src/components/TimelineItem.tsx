@@ -6,7 +6,7 @@ import type { ItemDefinition, Span } from "dnd-timeline";
 export interface TimelineItemProps {
 	id: string; // booking item id, unique id in dnd-timeline context.
 	span: Span; // dnd-timeline span object which contains start and end time in epoch.
-	formatPeriod: number; // difference between to two spanning positions of the timeline in milliseconds.
+	timelineGridDelta: number; // difference between to two spanning positions of the timeline in milliseconds.
 	isCreating?: boolean; //if the booking is on creating.
 	rowId?: string; // row id, unique id in dnd-timeline context.
 	groupId?: string; // group id, unique id in dnd-timeline context.
@@ -15,20 +15,20 @@ export interface TimelineItemProps {
 export type TimelineItemDefinition = ItemDefinition & { groupId: string };
 
 const TimelineItem = (props: TimelineItemProps) => {
-	const { groupId, rowId, isCreating, formatPeriod, disabled } = props
+	const { groupId, rowId, isCreating, timelineGridDelta, disabled } = props
 	const { setNodeRef, attributes, listeners, itemStyle, itemContentStyle, } =
 		useItem({
 			id: props.id,
 			span: props.span,
 			data: {
-				type: 'BOOKING_ITEM',
+				type: 'TIMELINE_ITEM',
 				groupId,
 				rowId,
-				formatPeriod
+				timelineGridDelta
 			},
 			disabled: disabled || isCreating
 		});
-	const flightItemStyle = useMemo(() => {
+	const flightItemStyle = useMemo<React.CSSProperties>(() => {
 		return {
 			opacity: props.isCreating ? 0.9 : 1,
 			color: 'white',
@@ -41,7 +41,7 @@ const TimelineItem = (props: TimelineItemProps) => {
 			overflow: "hidden",
 			cursor: props.isCreating ? 'pointer' : undefined,
 			transform: props.isCreating ? 'scale(1.02)' : 'scale(1)',
-			padding: '10px 15px',
+			padding: '5px 10px',
 			display: 'flex',
 			alignItems: 'center',
 			justifyContent: 'center',
@@ -50,7 +50,12 @@ const TimelineItem = (props: TimelineItemProps) => {
 	}, [props.isCreating]);
 	return (
 		<div ref={setNodeRef} style={itemStyle} {...listeners} {...attributes}>
-			<div style={itemContentStyle}>
+			<div style={{
+				...itemContentStyle, 
+				maxHeight: 20,
+				height: 'auto',
+				marginTop: '10px'
+			}}>
 				<div
 					style={flightItemStyle}
 				>

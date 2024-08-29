@@ -4,17 +4,17 @@ import { nanoid } from "nanoid";
 import { MarkerDefinition } from "./components/TimeScaleAxis";
 import { TimelineItemDefinition } from "./components/TimelineItem";
 
-export const generateGroups = (count: number, range: Range): Group[] => {
+export const generateGroups = (count: number): Group[] => {
 	const groups = Array(count).fill(0).map(() => {
 		let id = `group-${nanoid(5)}`;
 		return {
 			id,
-			rows: generateRows(5, id, range)
+			rows: generateRows(5, id)
 		};
 	})
 	return groups;
 }
-export const generateRows = (count: number, groupId: string, range: Range) => {
+export const generateRows = (count: number, groupId: string) => {
 	return Array(count)
 		.fill(0)
 		.map(() => {

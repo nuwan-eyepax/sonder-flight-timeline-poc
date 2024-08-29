@@ -11,11 +11,11 @@ interface FlightRowProps extends RowDefinition {
 	groupId?: string;
 	items: TimelineItemDefinition[];
 	isUpdating: boolean
-	onCreateBookingItem: (item: TimelineItemDefinition) => void;
+	onCreateTimelineItem: (item: TimelineItemDefinition) => void;
 }
 
 const TimelineRow = (props: FlightRowProps) => {
-	const { id, items, groupId, onCreateBookingItem, isUpdating } = props;
+	const { id, items, groupId, onCreateTimelineItem, isUpdating } = props;
 	const {
 		setNodeRef,
 		setSidebarRef,
@@ -24,7 +24,7 @@ const TimelineRow = (props: FlightRowProps) => {
 		rowSidebarStyle,
 	} = useRow({ id });
 	const { pixelsToValue, range, sidebarWidth, } = useTimelineContext();
-	const { formatPeriod, gridPositions } = useTimelineGridContext();
+	const { timelineGridDelta, gridPositions } = useTimelineGridContext();
 	const [creatingItem, setCreatingItem] = useState<TimelineItemDefinition>();
 	const isOverlapping = useCallback((startValue: number) => {
 		return items.findIndex(({ span }) => span.start === startValue) > -1
@@ -35,33 +35,33 @@ const TimelineRow = (props: FlightRowProps) => {
 		}
 		const { clientX } = e;
 		const startDate = pixelsToValue(clientX - sidebarWidth) + range.start;
-		const start = Math.floor(startDate / formatPeriod) * formatPeriod;
+		const start = Math.floor(startDate / timelineGridDelta) * timelineGridDelta;
 		if (!isOverlapping(start)) {
 			const BookingItem: TimelineItemDefinition = {
 				id: `item-${nanoid(3)}`,
 				span: {
 					start: start,
-					end: start + formatPeriod
+					end: start + timelineGridDelta
 				},
 				groupId,
 				rowId,
 			}
 			setCreatingItem(BookingItem);
 		}
-	}, [formatPeriod, isOverlapping, pixelsToValue, range.start, sidebarWidth, isUpdating]);
+	}, [timelineGridDelta, isOverlapping, pixelsToValue, range.start, sidebarWidth, isUpdating]);
 
 	const handleMouseLeaveFlight = useCallback(() => {
 		creatingItem && setCreatingItem(undefined);
 	}, [creatingItem]);
 
 	const handleClick = useCallback(() => {
-		creatingItem && onCreateBookingItem(creatingItem);
-	}, [creatingItem, onCreateBookingItem]);
+		creatingItem && onCreateTimelineItem(creatingItem);
+	}, [creatingItem, onCreateTimelineItem]);
 	const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
 		if (creatingItem) {
 			const { clientX } = e;
 			const startDate = pixelsToValue(clientX - sidebarWidth) + range.start;
-			const currentStart = Math.floor(startDate / formatPeriod) * formatPeriod;
+			const currentStart = Math.floor(startDate / timelineGridDelta) * timelineGridDelta;
 			if (creatingItem.span.start > currentStart) {
 				setCreatingItem(undefined);
 			} else {
@@ -72,7 +72,7 @@ const TimelineRow = (props: FlightRowProps) => {
 								...prev,
 								span: {
 									start: prev.span.start,
-									end: currentStart + formatPeriod
+									end: currentStart + timelineGridDelta
 								}
 							}
 						}
@@ -80,16 +80,16 @@ const TimelineRow = (props: FlightRowProps) => {
 				}
 			}
 		}
-	}, [creatingItem, formatPeriod, isOverlapping, pixelsToValue, range.start, sidebarWidth]);
+	}, [creatingItem, timelineGridDelta, isOverlapping, pixelsToValue, range.start, sidebarWidth]);
 	useEffect(() => {
 		setCreatingItem(undefined);
 	}, [isUpdating]);
 	return (
-		<div style={{ ...rowWrapperStyle, minHeight: 30, background: "gray", border: "1px solid", marginBottom: "1px" }}>
+		<div style={{ ...rowWrapperStyle, minHeight: 40, background: "gray", border: "1px solid", marginBottom: "1px" }}>
 			<div ref={setSidebarRef} style={{ ...rowSidebarStyle }} >
 				<TimelineRowSidebar rowId={id} groupId={groupId!} />
 			</div>
-			<div ref={setNodeRef} style={{ ...rowStyle, position: 'relative', height: 20 }}>
+			<div ref={setNodeRef} style={{ ...rowStyle, position: 'relative'}}>
 				{gridPositions.map((sideDelta, index) => (
 					<div
 						key={`flight-${sideDelta}-${index}`}
@@ -108,7 +108,7 @@ const TimelineRow = (props: FlightRowProps) => {
 							style={{
 								width: "1px",
 								height: `100%`,
-								backgroundColor: "red", // Vertical line color
+								backgroundColor: "black", // Vertical line color
 							}}
 						/>
 
@@ -128,7 +128,7 @@ const TimelineRow = (props: FlightRowProps) => {
 							groupId={creatingItem.groupId}
 							key={creatingItem.id}
 							isCreating
-							formatPeriod={formatPeriod}
+							timelineGridDelta={timelineGridDelta}
 							rowId={creatingItem.rowId} />
 					)}
 					{items.map((item) => (
@@ -137,7 +137,7 @@ const TimelineRow = (props: FlightRowProps) => {
 							key={item.id}
 							span={item.span}
 							groupId={groupId}
-							formatPeriod={formatPeriod}
+							timelineGridDelta={timelineGridDelta}
 							rowId={item.rowId}
 						/>
 					))}

@@ -1,5 +1,5 @@
-import React, { useCallback, useState } from "react";
-import { endOfDay, endOfMonth, startOfDay, startOfMonth } from "date-fns";
+import React, { useCallback, useEffect, useState } from "react";
+import { endOfDay, endOfMonth, endOfWeek, startOfDay, startOfMonth, startOfWeek } from "date-fns";
 import type { DragEndEvent, Range, ResizeEndEvent } from "dnd-timeline";
 import { TimelineContext } from "dnd-timeline";
 import Timeline from "../components/CampaignTimeline";
@@ -13,19 +13,20 @@ import { TimelineItemDefinition } from "../components/TimelineItem";
 const restrictFlightControl: Modifier = ({ active, ...rest }) => {
 	const activeItemType = active?.data.current?.type as string;
 
-	if (activeItemType === 'BOOKING_ITEM') {
+	if (activeItemType === 'TIMELINE_ITEM') {
 		return restrictToHorizontalAxis({ ...rest, active })
 	}
 	return rest.transform
 }
 const now = new Date()
 const DEFAULT_RANGE: Range = {
-	start: startOfMonth(now).getTime(),
-	end: endOfMonth(now).getTime(),
+	start: startOfWeek(now).getTime(),
+	end: endOfWeek(now).getTime(),
 };
-const initGroups = generateGroups(3, DEFAULT_RANGE);
+const initGroups = generateGroups(3);
 function CampaignTimelinePage() {
 	const [range, setRange] = useState(DEFAULT_RANGE);
+
 	const [groups, setGroups] = useState(initGroups);
 	const [isItemResizing, setIsItemResizing] = useState(false);
 	const [isItemDragging, setIsItemDragging] = useState(false);
@@ -44,15 +45,15 @@ function CampaignTimelinePage() {
 			event.active.data.current.getSpanFromResizeEvent?.(event);
 		if (!updatedSpan)
 			return;
-		const formatPeriod = event.active.data.current.formatPeriod as number;
+		const timelineGridDelta = event.active.data.current.timelineGridDelta as number;
 		const modifiedSpan = {
-			start: Math.floor(updatedSpan?.start / formatPeriod) * formatPeriod,
-			end: Math.ceil(updatedSpan?.end / formatPeriod) * formatPeriod
+			start: Math.floor(updatedSpan?.start / timelineGridDelta) * timelineGridDelta,
+			end: Math.ceil(updatedSpan?.end / timelineGridDelta) * timelineGridDelta
 		}
 		const activeItemId = event.active.id;
-		const groupId = event.active.data.current.flightGroupId;
+		const groupId = event.active.data.current.groupId;
 		const activeItemType = event.active.data.current.type as string;
-		if (updatedSpan && activeItemType === 'BOOKING_ITEM') {
+		if (updatedSpan && activeItemType === 'TIMELINE_ITEM') {
 			setGroups((prev) => {
 				const groups = [...prev]
 				const groupIndex = groups.findIndex((group) => group.id === groupId);
@@ -80,20 +81,21 @@ function CampaignTimelinePage() {
 		if (!overedId) return;
 		const activeId = event.active.id;
 		const activeItemType = event.active.data.current.type as string;
-		const groupId = event.active.data.current.flightGroupId;
-		if (activeItemType === 'BOOKING_ITEM') {
-			const formatPeriod = event.active.data.current.formatPeriod as number;
+		const groupId = event.active.data.current.groupId;
+		if (activeItemType === 'TIMELINE_ITEM') {
+			const timelineGridDelta = event.active.data.current.timelineGridDelta as number;
 			const updatedSpan = event.active.data.current.getSpanFromDragEvent?.(event);
 			if (!updatedSpan) {
 				return;
 			}
 			const modifiedSpan = {
-				start: Math.round(updatedSpan.start / formatPeriod) * formatPeriod,
-				end: Math.round(updatedSpan.end / formatPeriod) * formatPeriod
+				start: Math.round(updatedSpan.start / timelineGridDelta) * timelineGridDelta,
+				end: Math.round(updatedSpan.end / timelineGridDelta) * timelineGridDelta
 			}
 			setGroups((prev) => {
 				const groups = [...prev]
 				const groupIndex = groups.findIndex((group) => group.id === groupId);
+				console.log(groupIndex)
 				groups[groupIndex].rows = groups[groupIndex].rows.map((row) => {
 					const currentFlightSpans = row.items.filter(({ id }) => activeId !== id).map(({ span }) => span);
 					return {
@@ -115,7 +117,7 @@ function CampaignTimelinePage() {
 				return groups
 			});
 		}
-		if (activeItemType === 'FLIGHT_SIDE_BAR') {
+		if (activeItemType === 'TIMELINE_ROW_SIDEBAR') {
 			setGroups((prev) => {
 				const groups = [...prev]
 				const groupIndex = groups.findIndex((group) => group.id === groupId);
@@ -152,7 +154,7 @@ function CampaignTimelinePage() {
 		}
 	}, [range]);
 
-	const onCreateBookingItem = useCallback(({ id, rowId, groupId, span }: TimelineItemDefinition) => {
+	const onCreateTimelineItem = useCallback(({ id, rowId, groupId, span }: TimelineItemDefinition) => {
 		setGroups((prev) => {
 			const groups = [...prev]
 			const groupIndex = groups.findIndex((group) => group.id === groupId);
@@ -188,6 +190,13 @@ function CampaignTimelinePage() {
 			}
 		})
 	}
+	useEffect(()=>{
+		console.log('range', {
+			start: new Date(range.start),
+			end: new Date(range.end)
+	
+		})
+	},[range])
 	return (
 		<TimelineContext
 			range={range}
@@ -204,7 +213,7 @@ function CampaignTimelinePage() {
 			<TimelineGridProvider markerDefinitions={timeAxisMarkers[view]}>
 				<Timeline
 					groups={groups}
-					onCreateBookingItem={onCreateBookingItem}
+					onCreateTimelineItem={onCreateTimelineItem}
 					handleViewChange={handleViewChange}
 					isItemDragging={isItemDragging}
 					isItemIsResizing={isItemResizing}

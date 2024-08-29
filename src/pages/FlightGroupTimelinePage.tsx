@@ -13,7 +13,7 @@ import { TimelineItemDefinition } from "../components/TimelineItem";
 const restrictFlightControl: Modifier = ({ active, ...rest }) => {
     const activeItemType = active?.data.current?.type as string;
 
-    if (activeItemType === 'BOOKING_ITEM') {
+    if (activeItemType === 'TIMELINE_ITEM') {
         return restrictToHorizontalAxis({ ...rest, active })
     }
     return rest.transform
@@ -23,7 +23,7 @@ const DEFAULT_RANGE: Range = {
     start: startOfMonth(now).getTime(),
     end: endOfMonth(now).getTime(),
 };
-const initGroups = generateGroups(1, DEFAULT_RANGE);
+const initGroups = generateGroups(1);
 function FlightGroupTimelinePage() {
     const [range, setRange] = useState(DEFAULT_RANGE);
     const [group, setGroup] = useState(initGroups[0]);
@@ -44,14 +44,14 @@ function FlightGroupTimelinePage() {
             event.active.data.current.getSpanFromResizeEvent?.(event);
         if (!updatedSpan)
             return;
-        const formatPeriod = event.active.data.current.formatPeriod as number;
+        const timelineGridDelta = event.active.data.current.timelineGridDelta as number;
         const modifiedSpan = {
-            start: Math.floor(updatedSpan?.start / formatPeriod) * formatPeriod,
-            end: Math.ceil(updatedSpan?.end / formatPeriod) * formatPeriod
+            start: Math.floor(updatedSpan?.start / timelineGridDelta) * timelineGridDelta,
+            end: Math.ceil(updatedSpan?.end / timelineGridDelta) * timelineGridDelta
         }
         const activeItemId = event.active.id;
         const activeItemType = event.active.data.current.type as string;
-        if (updatedSpan && activeItemType === 'BOOKING_ITEM') {
+        if (updatedSpan && activeItemType === 'TIMELINE_ITEM') {
             setGroup((group) => {
                 group.rows = group.rows.map((row) => {
                     return {
@@ -77,15 +77,15 @@ function FlightGroupTimelinePage() {
         if (!overedId) return;
         const activeId = event.active.id;
         const activeItemType = event.active.data.current.type as string;
-        if (activeItemType === 'BOOKING_ITEM') {
-            const formatPeriod = event.active.data.current.formatPeriod as number;
+        if (activeItemType === 'TIMELINE_ITEM') {
+            const timelineGridDelta = event.active.data.current.timelineGridDelta as number;
             const updatedSpan = event.active.data.current.getSpanFromDragEvent?.(event);
             if (!updatedSpan) {
                 return;
             }
             const modifiedSpan = {
-                start: Math.round(updatedSpan.start / formatPeriod) * formatPeriod,
-                end: Math.round(updatedSpan.end / formatPeriod) * formatPeriod
+                start: Math.round(updatedSpan.start / timelineGridDelta) * timelineGridDelta,
+                end: Math.round(updatedSpan.end / timelineGridDelta) * timelineGridDelta
             }
             setGroup((group) => {
                 group.rows = group.rows.map((row) => {
@@ -109,7 +109,7 @@ function FlightGroupTimelinePage() {
                 return group
             });
         }
-        if (activeItemType === 'FLIGHT_SIDE_BAR') {
+        if (activeItemType === 'TIMELINE_ROW_SIDEBAR') {
             setGroup((group) => {
                 const oldIndex = group.rows.findIndex((row) => row.id === activeId);
                 const newIndex = group.rows.findIndex((row) => row.id === overedId);
@@ -144,7 +144,7 @@ function FlightGroupTimelinePage() {
         }
     }, [range]);
 
-    const onCreateBookingItem = useCallback(({ id, rowId, groupId, span }: TimelineItemDefinition) => {
+    const onCreateTimelineItem = useCallback(({ id, rowId, groupId, span }: TimelineItemDefinition) => {
         setGroup((group) => {
             const rowIndex = group.rows.findIndex((row) => row.id === rowId);
             const itemIndex = group.rows[rowIndex].items.findIndex((item) => item.id === id);
@@ -196,7 +196,7 @@ function FlightGroupTimelinePage() {
                     group={group}
                     isItemDragging={isItemDragging}
                     isItemIsResizing={isItemResizing}
-                    onCreateBookingItem={onCreateBookingItem}
+                    onCreateTimelineItem={onCreateTimelineItem}
                     handleViewChange={handleViewChange}
                     moveTimeline={moveTimeline}
                 />

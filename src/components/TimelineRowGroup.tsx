@@ -16,7 +16,7 @@ export interface FlightGroupRowProps {
 const TimelineRowGroup = (props: FlightGroupRowProps) => {
 	const [groupItem, setGroupItem] = useState<GroupItemDefinition>();
 	const [isCollapsed, setIsCollapsed] = useState(false);
-	const { formatPeriod } = useTimelineGridContext();
+	const { timelineGridDelta } = useTimelineGridContext();
 	const { sidebarWidth, range, pixelsToValue } = useTimelineContext();
 	const handleCollapse = () => {
 		setIsCollapsed((isCollapsed) => (!isCollapsed))
@@ -75,7 +75,7 @@ const TimelineRowGroup = (props: FlightGroupRowProps) => {
 				id={groupItem.id}
 				span={groupItem.span}
 				groupId={groupItem.groupId}
-				formatPeriod={formatPeriod}
+				timelineGridDelta={timelineGridDelta}
 				disabled
 			/>}
 

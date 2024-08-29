@@ -7,7 +7,7 @@ import FlightGroupTimeline from "./pages/FlightGroupTimelinePage";
 import FlightTimelinePage from "./pages/FlightTimelinePage";
 
 const navBarStyle = {
-    backgroundColor: '#333',
+    backgroundColor: '#FFF',
     padding: '10px',
 };
 
@@ -24,7 +24,7 @@ const navItemStyle = {
 };
 
 const navLinkStyle = {
-    color: 'white',
+    color: 'black',
     textDecoration: 'none',
 };
 

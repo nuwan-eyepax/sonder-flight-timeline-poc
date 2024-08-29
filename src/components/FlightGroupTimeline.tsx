@@ -11,16 +11,16 @@ export interface FlightTimelineProps {
 	group: Group,
 	isItemDragging: boolean;
 	isItemIsResizing: boolean;
-	onCreateBookingItem: (item: TimelineItemDefinition) => void;
+	onCreateTimelineItem: (item: TimelineItemDefinition) => void;
 	moveTimeline: (deltaX: number) => void
 	handleViewChange: (view: string) => void
 }
 
 
 function FlightGroupTimeline(props: FlightTimelineProps) {
-	const { onCreateBookingItem, isItemDragging, isItemIsResizing, handleViewChange, moveTimeline, group } = props;
+	const { onCreateTimelineItem, isItemDragging, isItemIsResizing, handleViewChange, moveTimeline, group } = props;
 	const { setTimelineRef, style } = useTimelineContext();
-	const { formatPeriod, setFormatPeriod } = useTimelineGridContext();
+	const { timelineGridDelta, setTimelineGridDelta } = useTimelineGridContext();
 	return (
 		<div>
 			<div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -30,13 +30,13 @@ function FlightGroupTimeline(props: FlightTimelineProps) {
 					<button onClick={() => handleViewChange('quarter')}>Quarter</button>
 				</div>
 				<div>
-					<button onClick={() => setFormatPeriod(1)}> 1 Day</button>
-					<button onClick={() => setFormatPeriod(0.5)}>0.5 Days</button>
-					<button onClick={() => setFormatPeriod(2)}> 2 Days</button>
+					<button onClick={() => setTimelineGridDelta(1)}> 1 Day</button>
+					<button onClick={() => setTimelineGridDelta(0.5)}>0.5 Days</button>
+					<button onClick={() => setTimelineGridDelta(2)}> 2 Days</button>
 				</div>
 				<div>
-					<button onClick={() => moveTimeline(-formatPeriod)}>{`<<`}</button>
-					<button onClick={() => moveTimeline(+formatPeriod)}>{`>>`}</button>
+					<button onClick={() => moveTimeline(-timelineGridDelta)}>{`<<`}</button>
+					<button onClick={() => moveTimeline(+timelineGridDelta)}>{`>>`}</button>
 				</div>
 			</div>
 
@@ -48,7 +48,7 @@ function FlightGroupTimeline(props: FlightTimelineProps) {
 							id={row.id}
 							key={row.id}
 							groupId={row.groupId}
-							onCreateBookingItem={onCreateBookingItem}
+							onCreateTimelineItem={onCreateTimelineItem}
 							items={row.items}
 							isUpdating={isItemDragging || isItemIsResizing}
 						/>

@@ -7,11 +7,11 @@ export interface Marker {
     heightMultiplier: number;
 }
 interface TimelineGridContextInterface {
-    formatPeriod: number;
+    timelineGridDelta: number;
     delta: number;
     markers: Marker[];
     gridPositions: number[];
-    setFormatPeriod: (value: number) => void;
+    setTimelineGridDelta: (value: number) => void;
 }
 const DAY_IN_MS = 1000 * 60 * 60 * 24; // 1 day in milliseconds
 
@@ -26,9 +26,9 @@ export const useTimelineGridContext = () => {
 };
 
 export const TimelineGridProvider: React.FC<{ children: ReactNode, markerDefinitions: MarkerDefinition[] }> = ({ children, markerDefinitions }) => {
-    const [formatPeriod, setFormatPeriod] = useState<number>(DAY_IN_MS);
+    const [timelineGridDelta, setTimelineGridDelta] = useState<number>(DAY_IN_MS);
     const handleFormatPeriod = (value: number) => {
-        setFormatPeriod(value * DAY_IN_MS)
+        setTimelineGridDelta(value * DAY_IN_MS)
     }
     const { range, valueToPixels, sidebarWidth, pixelsToValue } =
         useTimelineContext();
@@ -70,14 +70,14 @@ export const TimelineGridProvider: React.FC<{ children: ReactNode, markerDefinit
         for (const marker of markers) {
             const startTime = pixelsToValue(marker.sideDelta);
             const endTime = startTime + delta;
-            for (let time = startTime; time <= endTime; time += formatPeriod) {
+            for (let time = startTime; time <= endTime; time += timelineGridDelta) {
                 markerSideDeltas.push(valueToPixels(time));
             }
         }
         return markerSideDeltas;
-    }, [delta, formatPeriod, markers, pixelsToValue, valueToPixels]);
+    }, [delta, timelineGridDelta, markers, pixelsToValue, valueToPixels]);
     return (
-        <TimelineGridContext.Provider value={{ formatPeriod, delta, markers, gridPositions, setFormatPeriod: handleFormatPeriod }}>
+        <TimelineGridContext.Provider value={{ timelineGridDelta, delta, markers, gridPositions, setTimelineGridDelta: handleFormatPeriod }}>
             {children}
         </TimelineGridContext.Provider>
     );
