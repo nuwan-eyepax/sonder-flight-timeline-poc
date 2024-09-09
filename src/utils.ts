@@ -3,7 +3,7 @@ import type { Range, Span } from "dnd-timeline";
 import { nanoid } from "nanoid";
 import { MarkerDefinition } from "./components/TimeScaleAxis";
 import { TimelineItemDefinition } from "./components/TimelineItem";
-
+export const defaultDelta = 1000 * 60 * 60 * 24; // 1 day in milliseconds 
 export const generateGroups = (count: number): Group[] => {
 	const groups = Array(count).fill(0).map(() => {
 		let id = `group-${nanoid(5)}`;

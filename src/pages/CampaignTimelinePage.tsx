@@ -7,7 +7,7 @@ import { generateGroups, isOverlapping, timeAxisMarkers } from "../utils";
 import { arrayMove } from "@dnd-kit/sortable";
 import { Modifier } from "@dnd-kit/core";
 import { restrictToHorizontalAxis } from "@dnd-kit/modifiers";
-import { TimelineGridProvider } from "../components/TimelineGridContext";
+import { TimelineGridContextProvider } from "../components/TimelineGridContext";
 import { TimelineItemDefinition } from "../components/TimelineItem";
 
 const restrictFlightControl: Modifier = ({ active, ...rest }) => {
@@ -45,10 +45,10 @@ function CampaignTimelinePage() {
 			event.active.data.current.getSpanFromResizeEvent?.(event);
 		if (!updatedSpan)
 			return;
-		const timelineGridDelta = event.active.data.current.timelineGridDelta as number;
+		const delta = event.active.data.current.delta as number;
 		const modifiedSpan = {
-			start: Math.floor(updatedSpan?.start / timelineGridDelta) * timelineGridDelta,
-			end: Math.ceil(updatedSpan?.end / timelineGridDelta) * timelineGridDelta
+			start: Math.floor(updatedSpan?.start / delta) * delta,
+			end: Math.ceil(updatedSpan?.end / delta) * delta
 		}
 		const activeItemId = event.active.id;
 		const groupId = event.active.data.current.groupId;
@@ -83,14 +83,14 @@ function CampaignTimelinePage() {
 		const activeItemType = event.active.data.current.type as string;
 		const groupId = event.active.data.current.groupId;
 		if (activeItemType === 'TIMELINE_ITEM') {
-			const timelineGridDelta = event.active.data.current.timelineGridDelta as number;
+			const delta = event.active.data.current.delta as number;
 			const updatedSpan = event.active.data.current.getSpanFromDragEvent?.(event);
 			if (!updatedSpan) {
 				return;
 			}
 			const modifiedSpan = {
-				start: Math.round(updatedSpan.start / timelineGridDelta) * timelineGridDelta,
-				end: Math.round(updatedSpan.end / timelineGridDelta) * timelineGridDelta
+				start: Math.round(updatedSpan.start / delta) * delta,
+				end: Math.round(updatedSpan.end / delta) * delta
 			}
 			setGroups((prev) => {
 				const groups = [...prev]
@@ -177,11 +177,6 @@ function CampaignTimelinePage() {
 		});
 	}, []);
 
-	const handleViewChange = (newView: string) => {
-		setView(newView);
-		onChangeView(newView)
-	};
-
 	const moveTimeline = (deltaX: number) => {
 		setRange((prev) => {
 			return {
@@ -210,16 +205,16 @@ function CampaignTimelinePage() {
 			usePanStrategy={undefined} // this is a hack to disable default pan strategy, please revise
 			overlayed={false}
 		>
-			<TimelineGridProvider markerDefinitions={timeAxisMarkers[view]}>
+			<TimelineGridContextProvider >
 				<Timeline
 					groups={groups}
 					onCreateTimelineItem={onCreateTimelineItem}
-					handleViewChange={handleViewChange}
+					onChangeView={onChangeView}
 					isItemDragging={isItemDragging}
 					isItemIsResizing={isItemResizing}
 					moveTimeline={moveTimeline}
 				/>
-			</TimelineGridProvider>
+			</TimelineGridContextProvider>
 
 
 		</TimelineContext>

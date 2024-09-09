@@ -6,7 +6,7 @@ import type { ItemDefinition, Span } from "dnd-timeline";
 export interface TimelineItemProps {
 	id: string; // booking item id, unique id in dnd-timeline context.
 	span: Span; // dnd-timeline span object which contains start and end time in epoch.
-	timelineGridDelta: number; // difference between to two spanning positions of the timeline in milliseconds.
+	delta: number; // difference between to two spanning positions of the timeline in milliseconds.
 	isCreating?: boolean; //if the booking is on creating.
 	rowId?: string; // row id, unique id in dnd-timeline context.
 	groupId?: string; // group id, unique id in dnd-timeline context.
@@ -15,7 +15,7 @@ export interface TimelineItemProps {
 export type TimelineItemDefinition = ItemDefinition & { groupId: string };
 
 const TimelineItem = (props: TimelineItemProps) => {
-	const { groupId, rowId, isCreating, timelineGridDelta, disabled } = props
+	const { groupId, rowId, isCreating, delta, disabled } = props
 	const { setNodeRef, attributes, listeners, itemStyle, itemContentStyle, } =
 		useItem({
 			id: props.id,
@@ -24,7 +24,7 @@ const TimelineItem = (props: TimelineItemProps) => {
 				type: 'TIMELINE_ITEM',
 				groupId,
 				rowId,
-				timelineGridDelta
+				delta
 			},
 			disabled: disabled || isCreating
 		});
